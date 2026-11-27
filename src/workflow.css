@@ -5,3 +5,4 @@
 
 .plan-measure-label{font-size:9px;font-weight:800;letter-spacing:.3px;color:#7286ad;margin:0 0 9px}.review-files{border:1px solid #e5ebf4;background:#fbfcfe;border-radius:8px;padding:13px;margin:15px 0}.review-files>b{display:block;font-size:10px;color:#344762;margin-bottom:8px}.review-files>div{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #edf1f6;padding:9px 0}.review-files>div span{font-size:9px;color:#62738c;overflow-wrap:anywhere}.review-files>div button{white-space:nowrap;padding:8px 10px;font-size:9px}.review-files p{font-size:10px;color:#98a3b3;margin:0}
 @media(max-width:620px){.review-files>div{align-items:flex-start;flex-direction:column}}
+.vault-session-actions{display:flex;justify-content:flex-end;margin:0 0 10px}.vault-session-actions .secondary-btn{padding:8px 12px;font-size:9px}
