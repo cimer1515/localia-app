@@ -4,6 +4,23 @@ import "./workflow.css";
 const STORAGE_KEY = "localia.case.v1";
 const DEMO_REVIEW_PIN = "LOCALIA-DEMO-2026";
 const DEMO_ISSUER = "Entidad demostrativa LOCALIA (no oficial)";
+const AREA_TYPES = {
+ kitchen:{label:"Cocina",icon:"♨",color:"#fce6d5",sign:"COCINA"},
+ restroom:{label:"Baño",icon:"🚻",color:"#e8e2f8",sign:"BAÑO"},
+ storage:{label:"Bodega",icon:"▤",color:"#e6edf5",sign:"BODEGA"},
+ counter:{label:"Caja / atención",icon:"▣",color:"#dce8fa",sign:"ATENCIÓN"},
+ public:{label:"Área pública",icon:"♙",color:"#e2f1e8",sign:"ÁREA PÚBLICA"},
+ entrance:{label:"Entrada",icon:"↘",color:"#d8f1e7",sign:"ENTRADA"},
+ exit:{label:"Salida",icon:"⇧",color:"#c9f0df",sign:"SALIDA"},
+ fire:{label:"Extintor",icon:"🧯",color:"#f9dddd",sign:"EXTINTOR"},
+ firstaid:{label:"Primeros auxilios",icon:"✚",color:"#f5e5e5",sign:"PRIMEROS AUXILIOS"},
+ accessible:{label:"Accesibilidad",icon:"♿",color:"#e1eff9",sign:"ACCESIBLE"}
+};
+const DEMO_CERTIFICATE_TYPES = [
+ {key:"documentary",title:"Constancia demo de revisión documental",scope:"Documentos adjuntos y checklist"},
+ {key:"layout",title:"Constancia demo de plano y señalética",scope:"Distribución, señales y circulación"},
+ {key:"readiness",title:"Constancia demo de preparación del establecimiento",scope:"Resumen del expediente revisado"}
+];
 
 let caseData = null;
 let cryptoKey = null;
@@ -119,18 +136,22 @@ function renderShell() {
             <label>Frente (m)<input id="plan-width" type="number" min="2" max="100" value="8"></label>
             <label>Fondo (m)<input id="plan-depth" type="number" min="2" max="100" value="6"></label>
           </div>
-          <div class="plan-measure-label" id="plan-measure-label">Medidas calculadas del área</div><div class="editable-plan" id="editable-plan" aria-label="Plano ilustrativo del local">
-            <div class="plan-zone zone-work">ÁREA DE TRABAJO</div><div class="plan-zone zone-storage">BODEGA</div><div class="plan-zone zone-service">ATENCIÓN / CAJA</div><div class="plan-zone zone-public">ÁREA PÚBLICA</div><div class="plan-exit">ENTRADA / SALIDA</div><div class="plan-route">↗</div><div class="plan-fire">EXT.</div>
-          </div>
-          <div class="plan-key"><span>🟦 Zonas de uso</span><span>🟩 Ruta / salida</span><span>🟥 Señalética referencial</span></div>
-          <button class="secondary-btn" id="save-plan" type="button">Guardar medidas y esquema</button>
+          <div class="plan-measure-label" id="plan-measure-label">Medidas calculadas del área</div>
+          <label class="plan-tool-label">Área para colocar<select id="plan-tool">
+            <option value="kitchen">♨ Cocina</option><option value="restroom">🚻 Baño</option><option value="storage">▤ Bodega</option><option value="counter">▣ Caja / atención</option><option value="public">♙ Área pública</option><option value="entrance">↘ Entrada</option><option value="exit">⇧ Salida</option><option value="fire">🧯 Extintor</option><option value="firstaid">✚ Primeros auxilios</option><option value="accessible">♿ Accesibilidad</option>
+          </select></label>
+          <p class="plan-instruction">Toca las celdas para ubicar cocina, baño y demás áreas. Puedes cambiar la distribución libremente.</p>
+          <div class="editable-plan" id="editable-plan" aria-label="Plano interactivo del local"></div>
+          <div class="plan-preview-wrap"><b>Vista previa · señalética y circulación</b><div id="plan-visual-preview" class="plan-visual-preview"></div></div>
+          <div class="plan-key"><span>🟩 Flujo sugerido</span><span>🟥 Señales referenciales</span><span>🟦 Distribución elegida</span></div>
+          <div class="plan-actions"><button class="secondary-btn" id="save-plan" type="button">Guardar distribución</button><button class="secondary-btn" id="download-plan" type="button">Descargar plano PNG</button><button class="secondary-btn" id="clear-plan" type="button">Limpiar distribución</button></div>
           <p class="plan-warning">No es un plano técnico ni reemplaza la revisión de un profesional o la entidad competente.</p>
         </article>
       </div>
       <article class="workflow-panel requirements-panel">
-        <div class="panel-title"><span>04</span><div><b>Requisitos y documentos</b><small>Checklist orientativo; no confirma requisitos oficiales</small></div></div>
-        <div class="requirements-output" id="requirements-output"></div>
-        <div class="document-add"><label>Tipo de documento<select id="document-type"><option>Croquis / plano</option><option>Documento del responsable</option><option>Respaldo de ubicación del local</option><option>Documento sanitario</option><option>Otro documento</option></select></label><label>Nombre del documento<input id="document-name" maxlength="120" placeholder="Nombre o referencia del documento"></label><label>Archivo PDF o imagen (máx. 250 KB)<input id="document-file" type="file" accept=".pdf,image/png,image/jpeg,image/webp"></label><button class="secondary-btn" id="add-document" type="button">Cifrar y añadir</button></div>
+        <div class="panel-title"><span>04</span><div><b>Certificados y documentos que preparar</b><small>Vista previa antes de completar y enviar</small></div></div><p class="plan-warning">LOCALIA prepara borradores y checklist, no emite permisos oficiales. Confirma la lista con la entidad competente.</p>
+        <div class="generated-documents" id="generated-documents"></div><div class="requirements-output" id="requirements-output"></div>
+        <div class="document-add"><label>Tipo de documento<select id="document-type"><option value="Croquis / plano">Croquis / plano</option><option value="Documento del responsable">Documento del responsable</option><option value="Respaldo de ubicación del local">Respaldo de ubicación del local</option><option value="Documento sanitario">Documento sanitario</option><option value="Documento de seguridad / prevención">Documento de seguridad / prevención</option><option value="Documento comercial / tributario">Documento comercial / tributario</option><option value="Otro documento">Otro documento</option></select></label><label>Nombre del documento<input id="document-name" maxlength="120" placeholder="Nombre o referencia del documento"></label><label>Archivo PDF o imagen (máx. 180 KB)<input id="document-file" type="file" accept=".pdf,image/png,image/jpeg,image/webp"></label><button class="secondary-btn" id="add-document" type="button">Cifrar y añadir</button></div>
         <p class="form-feedback" id="document-feedback" aria-live="polite"></p>
       </article>
       <article class="workflow-panel submission-panel">
@@ -319,14 +340,14 @@ export function mountWorkflow() {
   $("#add-document").addEventListener("click",async()=>{
     const name=$("#document-name").value.trim(); if(!name){$("#document-feedback").textContent="Escribe el nombre del documento.";return;}
     const file=$("#document-file").files?.[0];
-    if(file && file.size>250*1024){$("#document-feedback").textContent="El archivo supera 250 KB. Reduce el tamaño para mantener el expediente cifrado dentro del almacenamiento local.";return;}
+    if(file && file.size>180*1024){$("#document-feedback").textContent="El archivo supera 180 KB. Reduce el tamaño para mantener el expediente cifrado dentro del almacenamiento local.";return;}
     if(file && !(file.type==="application/pdf" || file.type.startsWith("image/"))){$("#document-feedback").textContent="Adjunta un PDF o una imagen.";return;}
-    if(caseData.documents.length>=3){$("#document-feedback").textContent="La demo admite hasta 3 archivos por expediente.";return;}
+    if(caseData.documents.length>=8){$("#document-feedback").textContent="La demo admite hasta 8 archivos por expediente.";return;}
     let fileData=null;
     if(file){const bytes=new Uint8Array(await file.arrayBuffer());fileData=toBase64(bytes);}
     caseData.documents.push({type:$("#document-type").value,name,fileName:file?.name||"",mimeType:file?.type||"",encryptedPayload:fileData,addedAt:new Date().toISOString(),status:"declarado"});
     $("#document-name").value=""; $("#document-file").value=""; await saveEncryptedCase(); renderRequirements();
-    $("#document-feedback").textContent="Añadido. El contenido del archivo queda dentro del expediente cifrado en este navegador. Límite demo: 400 KB por archivo, hasta 5 archivos.";
+    $("#document-feedback").textContent="Añadido. El contenido del archivo queda dentro del expediente cifrado en este navegador. Límite demo: 180 KB por archivo, hasta 8 archivos.";
   });
   $("#submit-case").addEventListener("click",async()=>{
     const missing=requiredMissing(caseData.form);
