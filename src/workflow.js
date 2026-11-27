@@ -144,7 +144,7 @@ function renderShell() {
           <div class="editable-plan" id="editable-plan" aria-label="Plano interactivo del local"></div>
           <div class="plan-preview-wrap"><b>Vista previa · señalética y circulación</b><div id="plan-visual-preview" class="plan-visual-preview"></div></div>
           <div class="plan-key"><span>🟩 Flujo sugerido</span><span>🟥 Señales referenciales</span><span>🟦 Distribución elegida</span></div>
-          <div class="plan-actions"><button class="secondary-btn" id="save-plan" type="button">Guardar distribución</button><button class="secondary-btn" id="download-plan" type="button">Descargar plano PNG</button><button class="secondary-btn" id="clear-plan" type="button">Limpiar distribución</button></div>
+          <div class="plan-actions"><button class="secondary-btn" id="save-plan" type="button">Guardar distribución</button><button class="secondary-btn" id="download-plan" type="button">Descargar plano PNG</button><button class="secondary-btn" id="attach-plan" type="button">Adjuntar plano al expediente</button><button class="secondary-btn" id="clear-plan" type="button">Limpiar distribución</button></div>
           <p class="plan-warning">No es un plano técnico ni reemplaza la revisión de un profesional o la entidad competente.</p>
         </article>
       </div>
@@ -419,7 +419,7 @@ export function mountWorkflow() {
     data.area=Number(data.area);
     caseData.form=data; caseData.requirements=requirementList(data);
     const planWidth = Number($("#plan-width").value) || 8;
-    caseData.plan = { width: planWidth, depth: Math.max(2, Number((data.area / planWidth).toFixed(1))) };
+    caseData.plan = { width: planWidth, depth: Math.max(2, Number((data.area / planWidth).toFixed(1))), cells: caseData.plan?.cells || {} };
     $("#plan-depth").value = caseData.plan.depth;
     updatePlanLabel();
     await saveEncryptedCase();
@@ -434,11 +434,21 @@ export function mountWorkflow() {
   $("#plan-depth").addEventListener("input",()=>{updatePlanLabel();renderPlan();});
   $("#plan-tool").addEventListener("change",()=>{});
   $("#download-plan").addEventListener("click",downloadPlanPng);
+  $("#attach-plan").addEventListener("click",async()=>{
+    const svg=planSvg(),blob=new Blob([svg],{type:"image/svg+xml;charset=utf-8"}),url=URL.createObjectURL(blob),img=new Image();
+    img.onload=async()=>{const canvas=document.createElement("canvas");canvas.width=1600;canvas.height=960;canvas.getContext("2d").drawImage(img,0,0,1600,960);URL.revokeObjectURL(url);canvas.toBlob(async png=>{
+      if(!png)return;const bytes=new Uint8Array(await png.arrayBuffer());if(bytes.length>180*1024){$("#document-feedback").textContent="El plano generado supera 180 KB. Descárgalo y comprímelo antes de adjuntar.";return;}
+      caseData.documents=caseData.documents||[];const existing=caseData.documents.findIndex(d=>d.type==="Croquis / plano"&&d.name==="Plano LOCALIA generado");
+      const record={type:"Croquis / plano",name:"Plano LOCALIA generado",fileName:"LOCALIA-plano-senaletica.png",mimeType:"image/png",encryptedPayload:toBase64(bytes),addedAt:new Date().toISOString(),status:"declarado"};
+      if(existing>=0)caseData.documents[existing]=record;else if(caseData.documents.length<8)caseData.documents.push(record);else{$("#document-feedback").textContent="Límite de 8 archivos alcanzado.";return;}
+      await saveEncryptedCase();renderRequirements();$("#document-feedback").textContent="Plano PNG adjuntado y cifrado en el expediente.";
+    },"image/png");};img.onerror=()=>URL.revokeObjectURL(url);img.src=url;
+  });
   $("#clear-plan").addEventListener("click",async()=>{caseData.plan.cells={};renderPlan();await saveEncryptedCase();});
 
   $("#case-form").elements.area.addEventListener("input",()=>{const area=Number($("#case-form").elements.area.value);const width=Number($("#plan-width").value)||8;if(area>0&&width>0){$("#plan-depth").value=Math.max(2,Number((area/width).toFixed(1)));updatePlanLabel();renderPlan();}});
   $("#save-plan").addEventListener("click",async()=>{
-    caseData.plan={width:Number($("#plan-width").value),depth:Number($("#plan-depth").value)};
+    caseData.plan={width:Number($("#plan-width").value),depth:Number($("#plan-depth").value),cells:caseData.plan?.cells||{}};
     updatePlanLabel();
     await saveEncryptedCase(); $("#case-feedback").textContent="Medidas y esquema guardados dentro del expediente cifrado.";
   });
