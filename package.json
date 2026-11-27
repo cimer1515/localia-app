@@ -11,8 +11,7 @@
     "deploy:me-testnet": "node scripts/deploy-contract.js"
   },
   "dependencies": {
-    "ethers": "^6.17.0",
-    "meta-earth-js-sdk": "1.0.0"
+    "ethers": "^6.17.0"
   },
   "devDependencies": {
     "dotenv": "^16.4.7",
