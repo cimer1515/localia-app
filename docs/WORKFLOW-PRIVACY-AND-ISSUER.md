@@ -15,7 +15,7 @@
 
 ## Entidad de prueba integrada
 
-La interfaz incluye una entidad ficticia para una demostración. Para esta prueba el panel detecta campos vacíos y exige al menos dos archivos de respaldo adjuntos antes de aprobar; esa regla es solo de demo, no una lista oficial de requisitos. La entidad puede solicitar correcciones y el usuario debe corregir y reenviar:
+El panel de entidad ficticia verifica campos, archivos obligatorios según actividad y una lista de revisión de cada documento generado. El usuario puede ubicar áreas en un plano de 10×8 celdas, revisar la imagen de señalética y flujo, descargar PNG o adjuntar el plano cifrado. La entidad puede solicitar correcciones y el usuario debe corregir y reenviar:
 
 - **Entidad:** Entidad demostrativa LOCALIA (no oficial)
 - **PIN de demo:** `LOCALIA-DEMO-2026`
