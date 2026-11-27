@@ -313,7 +313,7 @@ export function mountWorkflow() {
   $("#add-document").addEventListener("click",async()=>{
     const name=$("#document-name").value.trim(); if(!name){$("#document-feedback").textContent="Escribe el nombre del documento.";return;}
     const file=$("#document-file").files?.[0];
-    if(file && file.size>250*1024){$("#document-feedback").textContent="El archivo supera 400 KB. Reduce el tamaño para mantener el expediente cifrado dentro del almacenamiento local.";return;}
+    if(file && file.size>250*1024){$("#document-feedback").textContent="El archivo supera 250 KB. Reduce el tamaño para mantener el expediente cifrado dentro del almacenamiento local.";return;}
     if(file && !(file.type==="application/pdf" || file.type.startsWith("image/"))){$("#document-feedback").textContent="Adjunta un PDF o una imagen.";return;}
     if(caseData.documents.length>=3){$("#document-feedback").textContent="La demo admite hasta 3 archivos por expediente.";return;}
     let fileData=null;
