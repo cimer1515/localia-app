@@ -286,6 +286,12 @@ function renderSubmission() {
   if (correctionPrint) correctionPrint.addEventListener("click",()=>window.print());
   $("#submit-case").textContent = caseData.status==="submitted" ? "Expediente enviado · esperando revisión" : caseData.status==="corrections" ? "Reenviar expediente corregido" : "Enviar expediente a entidad demo";
 }
+function requiredDocTypes() {
+  const types=["Croquis / plano","Documento del responsable","Respaldo de ubicación del local"];
+  if(caseData.form?.businessType==="cafe")types.push("Documento sanitario");
+  if(caseData.form?.businessType==="shop")types.push("Documento comercial / tributario");
+  return types;
+}
 function renderReviewer() {
   const area = $("#reviewer-workspace");
   if (!area.classList.contains("hidden")) {
@@ -312,9 +318,13 @@ function renderReviewer() {
         const url=URL.createObjectURL(blob); const link=document.createElement("a"); link.href=url; link.download=doc.fileName||"documento-expediente"; link.click(); URL.revokeObjectURL(url);
       });
     });
+    area.querySelectorAll(".review-item-check").forEach(input=>input.addEventListener("change",async()=>{
+      caseData.reviewedItems=caseData.reviewedItems||{};caseData.reviewedItems[input.dataset.reviewItem]=input.checked;await saveEncryptedCase();
+    }));
     $("#request-corrections").addEventListener("click", async () => {
       const reviewerNotes = $("#review-notes").value.trim();
-      caseData.corrections = [...missing.map(m=>`Completar o corregir: ${m}`), ...missingDocs.map(m=>`Documento requerido: ${m}`), ...(reviewerNotes ? [reviewerNotes] : [])];
+      const unchecked=generatedDocuments().filter(d=>!caseData.reviewedItems?.[d.key]).map(d=>"La entidad debe revisar: "+d.title+".");
+      caseData.corrections = [...missing.map(m=>"Completar o corregir: "+m), ...missingDocs.map(m=>"Documento requerido: "+m), ...unchecked, ...(reviewerNotes ? [reviewerNotes] : [])];
       if (!caseData.corrections.length) caseData.corrections.push("La entidad solicita revisar y completar los documentos de respaldo indicados en el checklist.");
       caseData.status = "corrections";
       caseData.correctionIssuedAt = new Date().toISOString();
@@ -432,7 +442,7 @@ export function mountWorkflow() {
   $("#submit-case").addEventListener("click",async()=>{
     const missing=requiredMissing(caseData.form);
     if(missing.length){caseData.corrections=missing;renderSubmission();return;}
-    caseData.status="submitted"; caseData.submittedAt=new Date().toISOString(); caseData.corrections=[];
+    caseData.status="submitted"; caseData.submittedAt=new Date().toISOString(); caseData.corrections=[];caseData.reviewedItems={};
     await saveEncryptedCase(); renderAll();
   });
   $("#open-reviewer").addEventListener("click",()=>$("#reviewer-access").classList.toggle("hidden"));
