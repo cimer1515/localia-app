@@ -412,6 +412,7 @@ async function renderCertificate() {
           if(cert.meTxHash)continue;
           button.textContent="Registra "+cert.certificateType+" en ME Network...";
           cert.meCredentialId=cert.meCredentialId||createCredentialId();
+          await saveEncryptedCase();
           const receipt=await registerDocumentHash(cert.meCredentialId,"0x"+cert.documentHash);
           cert.meTxHash=receipt.hash;cert.meChainId=wallet.chainId;cert.meIssuer=wallet.address;
           await saveEncryptedCase();
