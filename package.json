@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "compile:contract": "node scripts/compile-contract.js",
-    "deploy:me-testnet": "node scripts/deploy-contract.js"
+    "deploy:me-contract": "node scripts/deploy-contract.js"
   },
   "dependencies": {
     "ethers": "^6.17.0",
