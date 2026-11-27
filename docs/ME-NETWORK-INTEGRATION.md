@@ -24,7 +24,7 @@ El contrato NO convierte un documento en permiso oficial. Solo registra integrid
 
 ## Configuración de red
 
-El SDK oficial documenta EVM testnet con valores por defecto de RPC HTTP y chain ID 400. Una app web servida por HTTPS no puede llamar a un RPC HTTP por mixed content; debemos confirmar un RPC HTTPS accesible antes de integrar desde Netlify. Para mainnet, el SDK requiere configurar explícitamente el RPC EVM y el chain ID.
+Los valores RPC y chain ID deben confirmarse con la documentación oficial vigente o el equipo de Meta Earth antes de conectar o desplegar. No se fija un chain ID por defecto en LOCALIA para evitar transacciones en una red equivocada. Una app web servida por HTTPS necesita un RPC HTTPS accesible; un RPC HTTP puede ser bloqueado por mixed content. Mainnet requiere configuración explícita.
 
 No se deben copiar endpoints o chain IDs de blogs o fuentes no oficiales. Confirmar valores vigentes en documentación oficial o con el equipo de Meta Earth antes de desplegar.
 
