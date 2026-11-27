@@ -6,7 +6,7 @@ LOCALIA ayuda a emprendedores a preparar la apertura de un negocio: organiza dat
 
 1. El usuario crea una bóveda con contraseña.
 2. Ingresa la información del negocio y guarda un expediente cifrado localmente.
-3. Ajusta el croquis ilustrativo y agrega archivos de respaldo (máximo 1 MB por archivo en esta demo).
+3. Ajusta el croquis ilustrativo y agrega archivos de respaldo (máximo 400 KB por archivo y hasta 5 archivos en esta demo).
 4. Envía el expediente al panel de la entidad de prueba.
 5. La entidad demo puede emitir un documento de corrección o aprobar. LOCALIA no aprueba permisos por sí sola.
 6. Tras la aprobación de la entidad demo, se genera una constancia de demostración imprimible con QR y hash SHA-256.
