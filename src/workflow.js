@@ -186,6 +186,10 @@ function renderReviewer() {
       return;
     }
     const missing = requiredMissing(caseData.form || {});
+    const attachedFiles = (caseData.documents || []).filter(d => d.encryptedPayload);
+    const missingDocs = attachedFiles.length < 2
+      ? ["Adjuntar al menos 2 documentos de respaldo para la demostración (por ejemplo, croquis y documento de respaldo)."]
+      : [];
     const notes = caseData.form?.notes || "";
     area.innerHTML = `<div class="review-record"><div><span class="review-label">Expediente</span><b>${escapeHtml(caseData.id)}</b></div><div><span class="review-label">Negocio</span><b>${escapeHtml(caseData.form.businessName)}</b></div><div><span class="review-label">Responsable</span><b>${escapeHtml(caseData.form.ownerName)}</b></div><div><span class="review-label">Ubicación</span><b>${escapeHtml(caseData.form.address)}, ${escapeHtml(caseData.form.city)}</b></div><div><span class="review-label">Actividad</span><b>${escapeHtml(caseData.form.activity)}</b></div><div><span class="review-label">Área</span><b>${escapeHtml(caseData.form.area)} m²</b></div><div><span class="review-label">Documentos declarados</span><b>${(caseData.documents||[]).map(d=>escapeHtml(d.name)+(d.fileName?" (archivo adjunto)":" (sin archivo)")).join(", ")||"No adjuntados"}</b></div><div><span class="review-label">Notas del usuario</span><b>${escapeHtml(notes)||"Sin notas"}</b></div></div>
       <label>Observaciones / correcciones<textarea id="review-notes" rows="3" placeholder="Indica exactamente qué falta o qué debe corregirse"></textarea></label>
