@@ -338,8 +338,10 @@ function renderReviewer() {
       $("#print-correction").addEventListener("click",()=>window.print());
     });
     $("#approve-case").addEventListener("click", async () => {
-      if (requiredMissing(caseData.form).length || (caseData.documents||[]).filter(d=>d.encryptedPayload).length<2 || caseData.corrections.length) {
-        $("#reviewer-feedback").textContent = "No se puede aprobar: primero resuelve los campos, adjunta 2 archivos de respaldo de demo y cierra las correcciones.";
+      const missingFiles=requiredDocTypes().filter(type=>!(caseData.documents||[]).some(d=>d.type===type&&d.encryptedPayload));
+      const unchecked=generatedDocuments().filter(d=>!caseData.reviewedItems?.[d.key]);
+      if(requiredMissing(caseData.form).length||missingFiles.length||unchecked.length||caseData.corrections.length){
+        $("#reviewer-feedback").textContent="No se puede aprobar: faltan campos, archivos obligatorios, revisión de documentos o correcciones. "+missingFiles.join(", ")+" "+unchecked.map(d=>d.title).join(", ");
         return;
       }
       caseData.status = "approved"; caseData.approvedAt = new Date().toISOString(); caseData.approvingEntity = DEMO_ISSUER;
