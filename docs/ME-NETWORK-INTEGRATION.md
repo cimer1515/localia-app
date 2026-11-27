@@ -8,9 +8,9 @@ LOCALIA usará este camino para el prototipo:
 
 - **Web UI:** JavaScript (Vite actualmente). JavaScript/TypeScript es válido para la aplicación cliente y puede usar el SDK oficial.
 - **Smart contract:** Solidity para la EVM de ME Network.
-- **Interacción:** paquete oficial `meta-earth-js-sdk` para consultas y transacciones EVM cuando configuremos el RPC correcto.
+- **Interacción actual:** `ethers.js` + wallet EVM inyectada (EIP-1193) para que el usuario firme desde su wallet; es compatible con la EVM de ME Network. El SDK oficial `meta-earth-js-sdk` también existe, pero las operaciones EVM mainnet requieren `evmRpcUrl` y `evmChainId` explícitos.
 - **Documentos:** archivos y datos personales fuera de la blockchain. Guardar solo hashes, IDs opacos y metadatos mínimos.
-- **Red inicial:** testnet, antes de cualquier despliegue en mainnet.
+- **Objetivo HARBOR:** registrar las constancias demo aprobadas en ME Network mainnet, después de confirmar el endpoint EVM oficial y chain ID numérico. No usar Polygon ni otra cadena.
 
 ## Contrato inicial
 
@@ -24,11 +24,13 @@ El contrato NO convierte un documento en permiso oficial. Solo registra integrid
 
 ## Configuración de red
 
-El SDK oficial documenta EVM testnet con valores por defecto de RPC HTTP y chain ID 400. Una app web servida por HTTPS no puede llamar a un RPC HTTP por mixed content; debemos confirmar un RPC HTTPS accesible antes de integrar desde Netlify. Para mainnet, el SDK requiere configurar explícitamente el RPC EVM y el chain ID.
+La documentación oficial de ME indica que mainnet es EVM-compatible (anuncio del 15-09-2026). La guía oficial de ME Hub documenta el chain ID Hub como `me-chain`, pero ese valor es el identificador Cosmos/Hub y **no debe colocarse como chain ID numérico EVM**. Además, el anuncio de actualización V2.0.16 indicó que el EVM Chain ID se ajustó.
 
-No se deben copiar endpoints o chain IDs de blogs o fuentes no oficiales. Confirmar valores vigentes en documentación oficial o con el equipo de Meta Earth antes de desplegar.
+La documentación pública consultada no permite confirmar de forma segura el RPC EVM mainnet ni el chain ID numérico actual. Solicitar ambos al equipo oficial (devsupport@mec.me) o al canal técnico de HARBOR. El SDK oficial señala expresamente que las operaciones EVM mainnet requieren configurar `evmRpcUrl` y `evmChainId`.
 
-## Seguridad
+La app no activa el registro hasta que `VITE_ME_EVM_CHAIN_ID` y `VITE_LOCALIA_REGISTRY_ADDRESS` estén configurados. El deploy local requiere `ME_EVM_RPC_URL`, `ME_EVM_CHAIN_ID` y una clave de despliegue guardada únicamente en `.env`. Un sitio HTTPS necesita RPC HTTPS si se consulta directamente desde el navegador.
+
+## Flujo implementado en LOCALIA\n\nCuando el expediente demo pasa a `issued`, el panel permite conectar la wallet y registrar cada constancia. La app crea un ID opaco, envía `registerCredential(id, hash)` al contrato y guarda tx hash, chain ID y address emisora dentro del expediente cifrado. El QR se actualiza con esos datos. Cada transacción requiere aprobación de la wallet y gas. El contrato autoriza al deployer; otra wallet debe ser autorizada por el owner.\n\n## Seguridad
 
 - Nunca guardar frases semilla ni claves privadas en el frontend, repositorio, Netlify variables públicas o localStorage.
 - No subir certificados completos, nombres, números de identificación, direcciones ni otros datos personales a la blockchain.
@@ -38,6 +40,6 @@ No se deben copiar endpoints o chain IDs de blogs o fuentes no oficiales. Confir
 
 ## Fuentes oficiales
 
-- ME Developer Center: https://www.mec.me/en-US/developer-center
+- ME Developer Center: https://www.mec.me/en-US/developer-center\n- ME EVM compatibility: https://www.mec.me/en-US/developer-blog/me-network-goes-evm-compatible-embracing-the-ethereum-ecosys\n- ME SDK official repository: https://github.com/openmetaearth/meta-earth-js-sdk\n- Contacto técnico: devsupport@mec.me
 - EVM compatibility announcement (2026-09-15): https://www.mec.me/en-US/developer-blog/me-network-goes-evm-compatible-embracing-the-ethereum-ecosys
 - Meta Earth JS SDK: https://github.com/openmetaearth/meta-earth-js-sdk

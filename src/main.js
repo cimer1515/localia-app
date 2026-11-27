@@ -1,5 +1,5 @@
 import "./style.css";
-import { connectMEWallet } from "./me-network.js";
+import { mountWorkflow } from "./workflow.js";
 
 const app = document.querySelector("#app");
 
@@ -55,9 +55,9 @@ app.innerHTML = `
     <section class="feature-strip" id="como-funciona"><div><span>01</span><b>Conoce tus requisitos</b><small>Una ruta según tu actividad y ubicación.</small></div><div><span>02</span><b>Organiza tus documentos</b><small>Checklist para avanzar paso a paso.</small></div><div><span>03</span><b>Visualiza tu local</b><small>Distribución y señalética sugerida.</small></div></section>
     <section class="network-section" id="me-network">
       <div class="network-card">
-        <div class="network-badge"><span class="live-dot"></span> ME NETWORK · EVM</div>
-        <div class="network-content"><h2>Certificados con <em>integridad verificable.</em></h2><p>LOCALIA prepara el registro de huellas digitales de documentos en ME Network. El archivo original permanece fuera de la blockchain.</p></div>
-        <div class="network-action"><button class="primary-btn" id="me-connect-btn" type="button">Conectar wallet <span>↗</span></button><div id="me-connect-status" class="network-status" aria-live="polite">Testnet · chain ID 400 configurado como referencia</div></div>
+        <div class="network-badge"><span class="live-dot"></span> CERTIFICADO · REVISIÓN · BLOCKCHAIN</div>
+        <div class="network-content"><h2>La blockchain entra <em>después de aprobar.</em></h2><p>La entidad revisa el expediente, solicita correcciones si faltan datos y aprueba. Solo entonces se prepara el certificado y se registra su huella en ME Network. Los datos personales permanecen fuera de la cadena.</p></div>
+        <div class="network-action"><span class="network-status">Conexión blockchain: pendiente de configuración oficial y despliegue del contrato.</span></div>
       </div>
     </section>
     <section class="tool-section" id="herramienta">
@@ -77,26 +77,7 @@ app.innerHTML = `
   <footer><a class="brand footer-brand" href="#top"><span class="brand-mark">L</span><span>LOCALIA<small>BUSINESS SETUP</small></span></a><span>Construyendo el camino para abrir tu negocio.</span><span>Hackathon prototype · 2026</span></footer>
 `;
 
-const meConnectButton = document.querySelector("#me-connect-btn");
-meConnectButton.addEventListener("click", async () => {
-  const status = document.querySelector("#me-connect-status");
-  meConnectButton.disabled = true;
-  meConnectButton.innerHTML = "Conectando…";
-  status.textContent = "Confirma la conexión en tu wallet.";
-  status.classList.remove("is-error");
-  try {
-    const connection = await connectMEWallet();
-    status.textContent = `Wallet conectada: ${connection.address.slice(0, 6)}…${connection.address.slice(-4)} · chain ID ${connection.chainId}`;
-    status.classList.add("is-connected");
-    meConnectButton.innerHTML = "Wallet conectada ✓";
-  } catch (error) {
-    status.textContent = error instanceof Error ? error.message : String(error);
-    status.classList.add("is-error");
-    meConnectButton.innerHTML = "Intentar conectar de nuevo ↗";
-  } finally {
-    meConnectButton.disabled = false;
-  }
-});
+mountWorkflow();
 
 const form = document.querySelector("#business-form");
 form.addEventListener("submit", (event) => {
@@ -113,6 +94,11 @@ form.addEventListener("submit", (event) => {
     <div class="generated-plan"><div class="plan-label">ESQUEMA ILUSTRATIVO <span>${width} × ${length} m</span></div><div class="generated-room"><div class="zone z-kitchen">Área de trabajo</div><div class="zone z-store">Almacenamiento</div><div class="zone z-counter">Atención / caja</div><div class="zone z-seats">Área de clientes</div><div class="plan-door">ENTRADA / SALIDA</div><div class="plan-arrow">↗</div><div class="plan-ext">EXT.</div></div></div>
     <div class="checklist-head"><h4>Tu checklist inicial</h4><span>${requirements.length} puntos</span></div><ul class="requirements">${requirements.map((r,i)=>`<li><span>${String(i+1).padStart(2,"0")}</span>${r}</li>`).join("")}</ul>
     <div class="suggested-signs"><b>Señalética para revisar</b><div><span>↗ Salida</span><span>✚ Extintor</span><span>♿ Accesibilidad</span><span>⚠ Riesgos</span></div></div>
-    <p class="result-disclaimer">Lista orientativa, no exhaustiva. Verifica las normas vigentes de tu ciudad y actividad antes de realizar obras o solicitar permisos.</p></div>`;
+    <p class="result-disclaimer">Lista orientativa, no exhaustiva. Verifica las normas vigentes de tu ciudad y actividad antes de realizar obras o solicitar permisos.</p><div class="result-next-step"><button class="primary-btn" id="go-private-workflow" type="button">Continuar con expediente privado →</button><p>Se trasladarán actividad, ciudad y medidas al expediente cifrado. Completa allí los datos restantes y revisa los documentos.</p></div></div>`;
+  document.querySelector("#go-private-workflow").addEventListener("click",()=>{
+    const detail={businessType:type,activity:businessNames[type],city,area,width,depth:Number(length)};
+    document.dispatchEvent(new CustomEvent("localia:quick-start",{detail}));
+    document.querySelector("#localia-workflow").scrollIntoView({behavior:"smooth",block:"start"});
+  });
   document.querySelector("#result").scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
