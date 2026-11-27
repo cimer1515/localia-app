@@ -293,6 +293,7 @@ export function mountWorkflow() {
   $("#case-form").elements.area.addEventListener("input",()=>{const area=Number($("#case-form").elements.area.value);const width=Number($("#plan-width").value)||8;if(area>0&&width>0){$("#plan-depth").value=Math.max(2,Number((area/width).toFixed(1)));updatePlanLabel();}});
   $("#save-plan").addEventListener("click",async()=>{
     caseData.plan={width:Number($("#plan-width").value),depth:Number($("#plan-depth").value)};
+    updatePlanLabel();
     await saveEncryptedCase(); $("#case-feedback").textContent="Medidas y esquema guardados dentro del expediente cifrado.";
   });
   $("#add-document").addEventListener("click",async()=>{
