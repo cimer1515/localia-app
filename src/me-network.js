@@ -9,7 +9,8 @@ const registryAbi = [
   "function revokeCredential(bytes32 credentialId)"
 ];
 
-const chainIdSetting = import.meta.env.VITE_ME_EVM_CHAIN_ID;\nconst expectedChainId = chainIdSetting ? Number(chainIdSetting) : null;
+const chainIdSetting = import.meta.env.VITE_ME_EVM_CHAIN_ID;
+const expectedChainId = chainIdSetting ? Number(chainIdSetting) : null;
 const registryAddress = import.meta.env.VITE_LOCALIA_REGISTRY_ADDRESS || "";
 
 let browserProvider;
@@ -17,7 +18,8 @@ let connectedAddress = "";
 
 export async function connectMEWallet() {
   if (!window.ethereum) throw new Error("No se detectó una wallet EVM. Instala o abre MetaMask/ME Pass compatible.");
-  if (!Number.isInteger(expectedChainId) || expectedChainId <= 0) throw new Error("Configura el chain ID oficial vigente de ME Network antes de conectar.");\n  browserProvider = new BrowserProvider(window.ethereum);
+  if (!Number.isInteger(expectedChainId) || expectedChainId <= 0) throw new Error("Configura el chain ID oficial vigente de ME Network antes de conectar.");
+  browserProvider = new BrowserProvider(window.ethereum);
   const accounts = await browserProvider.send("eth_requestAccounts", []);
   if (!accounts?.length) throw new Error("No se autorizó ninguna cuenta.");
   const network = await browserProvider.getNetwork();
