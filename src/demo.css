@@ -5,3 +5,23 @@
 @media print{body{background:#fff}.demo-nav,.demo-hero,.demo-alert,#workflow-demo,.demo-footer,.cert-actions,#certificates-heading{display:none!important}.demo-wrap{max-width:none;padding:0}.cert-grid{display:block}.certificate-card{display:none!important;border:0;border-radius:0;box-shadow:none;page-break-after:always;padding:18mm 14mm}.certificate-card[data-print-selected="true"]{display:block!important}.cert-notice{color:#333}.cert-proof .chain-label{color:#7b3f18}}
 
 .cert-highlight{outline:3px solid #7ba7df;outline-offset:3px;transition:outline-color .2s}
+
+.demo-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.demo-field{display:grid;gap:7px;font-size:13px;font-weight:700;color:#445a75;min-width:0}
+.demo-field span i{font-style:normal;color:#d04b47}
+.demo-field input,.demo-field textarea{width:100%;min-width:0;border:1px solid #dce4ee;border-radius:11px;padding:12px 13px;font:500 14px "DM Sans",sans-serif;color:#24344b;background:#fff}
+.demo-field textarea{resize:vertical;line-height:1.5}
+.demo-form>.demo-btn{justify-self:start}
+.requirement-card{border:1px solid #e0e7f0;border-radius:16px;padding:17px;margin:16px 0;background:#fbfcfe}
+.requirement-card h3{font:800 17px Manrope,sans-serif;color:#173353;margin:8px 0}
+.requirement-card p{margin:8px 0 13px}
+.form-number{font-size:10px;font-weight:800;letter-spacing:.1em;color:#3266c5;background:#eaf1ff;border-radius:7px;padding:6px 8px;display:inline-block}
+.demo-check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:13px 0}
+.demo-check{display:flex;align-items:flex-start;gap:9px;border:1px solid #e0e7f0;border-radius:10px;padding:10px;font-size:13px;font-weight:600;color:#455a73;background:#fff}
+.demo-check input{accent-color:#245de2;margin-top:2px;flex:0 0 auto}
+.file-note{font-size:11px!important;color:#8794a7!important;margin:6px 0 0!important;overflow-wrap:anywhere}
+.demo-muted{opacity:.82}
+.review-hint{font-size:13px;color:#8391a4}
+.correction-note{background:#fff4db;border:1px solid #f1d18a;color:#785517;padding:12px;border-radius:11px;font-size:13px;line-height:1.5;flex-basis:100%}
+@media(max-width:560px){.demo-form{grid-template-columns:1fr}.demo-check-grid{grid-template-columns:1fr}.requirement-card{padding:13px}.demo-actions .demo-btn{width:100%}}
+@media print{.demo-panel:not(#cert-panel){display:none!important}.demo-panel#cert-panel>h2,.demo-panel#cert-panel>p{display:none!important}}
