@@ -51,12 +51,33 @@ No es posible ocultar los datos necesarios a la entidad que debe revisarlos y, a
 
 ## ME Network
 
-La blockchain se usa únicamente después de la aprobación de la entidad autorizada:
-- registrar un identificador opaco y hash del certificado final;
-- no registrar nombres, identificación, dirección, archivos ni información personal;
-- el QR de la demo contiene un identificador y hash de demostración, no una verificación blockchain activa.
+## Registro real de constancias demo en ME Network
 
-El contrato Solidity de registro de credenciales está en `contracts/LocaliaCredentialRegistry.sol`. Antes de usarlo se debe confirmar el RPC HTTPS y chain ID oficial vigente, desplegar en testnet, autorizar al emisor real y auditar el contrato.
+Después de que la entidad demo aprueba y se generan las constancias, el panel muestra **“Conectar wallet y registrar constancias demo en ME Network”**. Al pulsarlo:
+
+1. La app solicita conectar una wallet EVM compatible con ME Network.
+2. Verifica que la wallet esté en el chain ID configurado.
+3. Envía una transacción por cada constancia aún no registrada.
+4. Guarda en la bóveda cifrada el hash de transacción, chain ID, dirección emisora e ID opaco.
+5. Actualiza el QR para incluir la transacción on-chain.
+
+Esto es un registro blockchain real cuando la transacción se confirma. La aprobación sigue siendo simulada y cada documento se marca **DEMO · NO OFICIAL**.
+
+### Configuración obligatoria antes de activar mainnet
+
+La documentación oficial confirma que ME Network mainnet es compatible con EVM, pero el SDK oficial indica que las operaciones EVM de mainnet necesitan un RPC y un EVM chain ID explícitos. La guía pública que revisamos no proporciona de forma verificable el endpoint EVM mainnet ni el chain ID numérico actual; el chain ID Hub `me-chain` no es un número EVM. No inventes esos valores.
+
+Solicita al equipo de Meta Earth los datos oficiales de EVM mainnet y configura localmente:
+
+- `ME_EVM_RPC_URL`: RPC HTTPS EVM mainnet oficial para desplegar.
+- `ME_EVM_CHAIN_ID`: chain ID numérico EVM mainnet confirmado.
+- `ME_DEPLOYER_PRIVATE_KEY`: clave de una wallet de despliegue, solo en tu archivo local `.env`; nunca la compartas ni la subas a GitHub.
+- `VITE_ME_EVM_CHAIN_ID`: el mismo chain ID numérico, para validar la wallet en el navegador.
+- `VITE_LOCALIA_REGISTRY_ADDRESS`: dirección del contrato después de desplegarlo en mainnet.
+
+El registro requiere una wallet con fondos para gas y una dirección autorizada en el contrato. El deployer es el primer emisor autorizado. Si usarás otra wallet, el owner debe autorizarla.
+
+El contrato Solidity está en `contracts/LocaliaCredentialRegistry.sol`. Registra solo IDs opacos y hashes; nunca nombres, números de identificación, direcciones del local ni archivos personales.
 
 ## Desarrollo
 
