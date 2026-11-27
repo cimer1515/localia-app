@@ -1,5 +1,4 @@
 import { BrowserProvider, Contract, keccak256 } from "ethers";
-import { MetaEarthSDK } from "meta-earth-js-sdk";
 
 const registryAbi = [
   "function owner() view returns (address)",
