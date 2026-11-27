@@ -115,7 +115,7 @@ function renderShell() {
             <label>Frente (m)<input id="plan-width" type="number" min="2" max="100" value="8"></label>
             <label>Fondo (m)<input id="plan-depth" type="number" min="2" max="100" value="6"></label>
           </div>
-          <div class="editable-plan" id="editable-plan" aria-label="Plano ilustrativo del local">
+          <div class="plan-measure-label" id="plan-measure-label">Medidas calculadas del área</div><div class="editable-plan" id="editable-plan" aria-label="Plano ilustrativo del local">
             <div class="plan-zone zone-work">ÁREA DE TRABAJO</div><div class="plan-zone zone-storage">BODEGA</div><div class="plan-zone zone-service">ATENCIÓN / CAJA</div><div class="plan-zone zone-public">ÁREA PÚBLICA</div><div class="plan-exit">ENTRADA / SALIDA</div><div class="plan-route">↗</div><div class="plan-fire">EXT.</div>
           </div>
           <div class="plan-key"><span>🟦 Zonas de uso</span><span>🟩 Ruta / salida</span><span>🟥 Señalética referencial</span></div>
@@ -153,10 +153,15 @@ function renderProgress() {
   const current = caseData.status === "draft" ? 0 : caseData.status === "submitted" ? 1 : caseData.status === "corrections" ? 2 : caseData.status === "approved" ? 3 : 4;
   $("#workflow-progress").innerHTML = steps.map((s,i)=>`<div class="progress-step ${i<=current?"active":""}"><span>${i+1}</span>${s}</div>`).join("");
 }
+function updatePlanLabel() {
+  const width = Number($("#plan-width").value) || 0;
+  const depth = Number($("#plan-depth").value) || 0;
+  $("#plan-measure-label").textContent = width > 0 && depth > 0 ? `Croquis automático · ${width.toFixed(1)} m × ${depth.toFixed(1)} m · ${(width*depth).toFixed(1)} m²` : "Ingresa medidas válidas";
+}
 function formFromCase() {
   const form = $("#case-form");
   for (const [key,value] of Object.entries(caseData.form || {})) if (form.elements[key]) form.elements[key].value = value;
-  if (caseData.plan) { $("#plan-width").value = caseData.plan.width; $("#plan-depth").value = caseData.plan.depth; }
+  if (caseData.plan) { $("#plan-width").value = caseData.plan.width; $("#plan-depth").value = caseData.plan.depth; }\n  updatePlanLabel();
 }
 function renderRequirements() {
   const form = caseData.form || {};
@@ -271,6 +276,10 @@ export function mountWorkflow() {
     const data=Object.fromEntries(new FormData(event.currentTarget).entries());
     data.area=Number(data.area);
     caseData.form=data; caseData.requirements=requirementList(data);
+    const planWidth = Number($("#plan-width").value) || 8;
+    caseData.plan = { width: planWidth, depth: Math.max(2, Number((data.area / planWidth).toFixed(1))) };
+    $("#plan-depth").value = caseData.plan.depth;
+    updatePlanLabel();
     await saveEncryptedCase();
     $("#case-feedback").textContent="Expediente guardado y cifrado en este navegador.";
     renderRequirements(); renderSubmission();
@@ -279,6 +288,9 @@ export function mountWorkflow() {
     if(!confirm("¿Borrar el expediente cifrado de este navegador? Esta acción no se puede deshacer."))return;
     localStorage.removeItem(STORAGE_KEY); cryptoKey=null; caseData=null; location.reload();
   });
+  $("#plan-width").addEventListener("input",()=>{const width=Number($("#plan-width").value);const area=Number($("#case-form").elements.area.value);if(width>0&&area>0){$("#plan-depth").value=Math.max(2,Number((area/width).toFixed(1)));updatePlanLabel();}});
+  $("#plan-depth").addEventListener("input",updatePlanLabel);
+  $("#case-form").elements.area.addEventListener("input",()=>{const area=Number($("#case-form").elements.area.value);const width=Number($("#plan-width").value)||8;if(area>0&&width>0){$("#plan-depth").value=Math.max(2,Number((area/width).toFixed(1)));updatePlanLabel();}});
   $("#save-plan").addEventListener("click",async()=>{
     caseData.plan={width:Number($("#plan-width").value),depth:Number($("#plan-depth").value)};
     await saveEncryptedCase(); $("#case-feedback").textContent="Medidas y esquema guardados dentro del expediente cifrado.";
