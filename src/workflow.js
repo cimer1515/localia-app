@@ -14,7 +14,11 @@ const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 }[c]));
 const randomHex = (length = 16) => Array.from(crypto.getRandomValues(new Uint8Array(length)), b => b.toString(16).padStart(2, "0")).join("");
-const toBase64 = (bytes) => btoa(String.fromCharCode(...bytes));
+const toBase64 = (bytes) => {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+};
 const fromBase64 = (value) => Uint8Array.from(atob(value), c => c.charCodeAt(0));
 
 async function deriveKey(passphrase, salt) {
@@ -198,10 +202,18 @@ function renderReviewer() {
       : [];
     const notes = caseData.form?.notes || "";
     area.innerHTML = `<div class="review-record"><div><span class="review-label">Expediente</span><b>${escapeHtml(caseData.id)}</b></div><div><span class="review-label">Negocio</span><b>${escapeHtml(caseData.form.businessName)}</b></div><div><span class="review-label">Responsable</span><b>${escapeHtml(caseData.form.ownerName)}</b></div><div><span class="review-label">Ubicación</span><b>${escapeHtml(caseData.form.address)}, ${escapeHtml(caseData.form.city)}</b></div><div><span class="review-label">Actividad</span><b>${escapeHtml(caseData.form.activity)}</b></div><div><span class="review-label">Área</span><b>${escapeHtml(caseData.form.area)} m²</b></div><div><span class="review-label">Documentos declarados</span><b>${(caseData.documents||[]).map(d=>escapeHtml(d.name)+(d.fileName?" (archivo adjunto)":" (sin archivo)")).join(", ")||"No adjuntados"}</b></div><div><span class="review-label">Notas del usuario</span><b>${escapeHtml(notes)||"Sin notas"}</b></div></div>
+      <div class="review-files"><b>Archivos disponibles para revisión</b>${(caseData.documents||[]).map((d,i)=>`<div><span>${escapeHtml(d.name)} · ${escapeHtml(d.fileName||"sin archivo")}</span><button class="secondary-btn review-file-btn" id="review-file-${i}" ${d.encryptedPayload?"":"disabled"}>Descargar para revisar</button></div>`).join("")||"<p>El usuario no añadió documentos.</p>"}</div>
       <label>Observaciones / correcciones<textarea id="review-notes" rows="3" placeholder="Indica exactamente qué falta o qué debe corregirse"></textarea></label>
       ${missing.length || missingDocs.length ? `<div class="missing-note">Pendientes detectados: ${[...missing,...missingDocs].map(escapeHtml).join(" · ")}</div>` : ""}
       <div class="review-actions"><button class="secondary-btn" id="request-corrections">Emitir documento de corrección</button><button class="primary-btn" id="approve-case">Aprobar expediente demo</button></div>
       <p class="demo-warning">La aprobación aquí es simulada y no constituye aprobación municipal ni certificado oficial.</p>`;
+    (caseData.documents||[]).forEach((doc,index)=>{
+      const button=$("#review-file-"+index);
+      if(button && doc.encryptedPayload) button.addEventListener("click",()=>{
+        const blob=new Blob([fromBase64(doc.encryptedPayload)],{type:doc.mimeType||"application/octet-stream"});
+        const url=URL.createObjectURL(blob); const link=document.createElement("a"); link.href=url; link.download=doc.fileName||"documento-expediente"; link.click(); URL.revokeObjectURL(url);
+      });
+    });
     $("#request-corrections").addEventListener("click", async () => {
       const reviewerNotes = $("#review-notes").value.trim();
       caseData.corrections = [...missing.map(m=>`Completar o corregir: ${m}`), ...missingDocs.map(m=>`Documento requerido: ${m}`), ...(reviewerNotes ? [reviewerNotes] : [])];
@@ -300,12 +312,14 @@ export function mountWorkflow() {
   $("#add-document").addEventListener("click",async()=>{
     const name=$("#document-name").value.trim(); if(!name){$("#document-feedback").textContent="Escribe el nombre del documento.";return;}
     const file=$("#document-file").files?.[0];
-    if(file && file.size>1024*1024){$("#document-feedback").textContent="El archivo supera 1 MB. Usa un archivo más pequeño para esta demo.";return;}
+    if(file && file.size>400*1024){$("#document-feedback").textContent="El archivo supera 400 KB. Reduce el tamaño para mantener el expediente cifrado dentro del almacenamiento local.";return;}
+    if(file && !(file.type==="application/pdf" || file.type.startsWith("image/"))){$("#document-feedback").textContent="Adjunta un PDF o una imagen.";return;}
+    if(caseData.documents.length>=5){$("#document-feedback").textContent="La demo admite hasta 5 archivos por expediente.";return;}
     let fileData=null;
     if(file){const bytes=new Uint8Array(await file.arrayBuffer());fileData=toBase64(bytes);}
     caseData.documents.push({name,fileName:file?.name||"",mimeType:file?.type||"",encryptedPayload:fileData,addedAt:new Date().toISOString(),status:"declarado"});
     $("#document-name").value=""; $("#document-file").value=""; await saveEncryptedCase(); renderRequirements();
-    $("#document-feedback").textContent="Añadido. El contenido del archivo queda dentro del expediente cifrado en este navegador. Límite demo: 1 MB por archivo.";
+    $("#document-feedback").textContent="Añadido. El contenido del archivo queda dentro del expediente cifrado en este navegador. Límite demo: 400 KB por archivo, hasta 5 archivos.";
   });
   $("#submit-case").addEventListener("click",async()=>{
     const missing=requiredMissing(caseData.form);
