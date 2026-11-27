@@ -161,7 +161,8 @@ function updatePlanLabel() {
 function formFromCase() {
   const form = $("#case-form");
   for (const [key,value] of Object.entries(caseData.form || {})) if (form.elements[key]) form.elements[key].value = value;
-  if (caseData.plan) { $("#plan-width").value = caseData.plan.width; $("#plan-depth").value = caseData.plan.depth; }\n  updatePlanLabel();
+  if (caseData.plan) { $("#plan-width").value = caseData.plan.width; $("#plan-depth").value = caseData.plan.depth; }
+  updatePlanLabel();
 }
 function renderRequirements() {
   const form = caseData.form || {};
