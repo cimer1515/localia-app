@@ -266,7 +266,8 @@ function renderGeneratedDocuments() {
 }
 function renderRequirements() {
   const form = caseData.form || {};
-  const reqs = caseData.requirements?.length ? caseData.requirements : requirementList(form);\n  renderGeneratedDocuments();
+  const reqs = caseData.requirements?.length ? caseData.requirements : requirementList(form);
+  renderGeneratedDocuments();
   $("#requirements-output").innerHTML = `<ul class="workflow-checklist">${reqs.map((r,i)=>`<li><span>${String(i+1).padStart(2,"0")}</span>${escapeHtml(r)}</li>`).join("")}</ul>
     <div class="docs-list"><b>Documentos añadidos</b>${(caseData.documents||[]).length ? caseData.documents.map(d=>`<span>📄 ${escapeHtml(d.type||"Documento")} · ${escapeHtml(d.name)} · ${d.fileName ? "archivo cifrado adjunto" : "solo referencia, sin archivo"}</span>`).join("") : "<p>Aún no has añadido documentos.</p>"}</div>`;
 }
@@ -404,9 +405,13 @@ export function mountWorkflow() {
     if(!confirm("¿Borrar el expediente cifrado de este navegador? Esta acción no se puede deshacer."))return;
     localStorage.removeItem(STORAGE_KEY); cryptoKey=null; caseData=null; location.reload();
   });
-  $("#plan-width").addEventListener("input",()=>{const width=Number($("#plan-width").value);const area=Number($("#case-form").elements.area.value);if(width>0&&area>0){$("#plan-depth").value=Math.max(2,Number((area/width).toFixed(1)));updatePlanLabel();}});
-  $("#plan-depth").addEventListener("input",updatePlanLabel);
-  $("#case-form").elements.area.addEventListener("input",()=>{const area=Number($("#case-form").elements.area.value);const width=Number($("#plan-width").value)||8;if(area>0&&width>0){$("#plan-depth").value=Math.max(2,Number((area/width).toFixed(1)));updatePlanLabel();}});
+  $("#plan-width").addEventListener("input",()=>{const width=Number($("#plan-width").value);const area=Number($("#case-form").elements.area.value);if(width>0&&area>0){$("#plan-depth").value=Math.max(2,Number((area/width).toFixed(1)));updatePlanLabel();renderPlan();}});
+  $("#plan-depth").addEventListener("input",()=>{updatePlanLabel();renderPlan();});
+  $("#plan-tool").addEventListener("change",()=>{});
+  $("#download-plan").addEventListener("click",downloadPlanPng);
+  $("#clear-plan").addEventListener("click",async()=>{caseData.plan.cells={};renderPlan();await saveEncryptedCase();});
+
+  $("#case-form").elements.area.addEventListener("input",()=>{const area=Number($("#case-form").elements.area.value);const width=Number($("#plan-width").value)||8;if(area>0&&width>0){$("#plan-depth").value=Math.max(2,Number((area/width).toFixed(1)));updatePlanLabel();renderPlan();}});
   $("#save-plan").addEventListener("click",async()=>{
     caseData.plan={width:Number($("#plan-width").value),depth:Number($("#plan-depth").value)};
     updatePlanLabel();
