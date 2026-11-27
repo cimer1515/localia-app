@@ -90,7 +90,7 @@ function renderShell() {
       <p class="vault-note" id="vault-note">La contraseña no se guarda. Si la pierdes, este prototipo no podrá recuperar el expediente.</p>
     </div>
     <div class="workflow-content hidden" id="workflow-content">
-      <div class="workflow-progress" id="workflow-progress"></div>
+      <div class="vault-session-actions"><button class="secondary-btn" id="lock-vault" type="button">Bloquear bóveda y salir</button></div><div class="workflow-progress" id="workflow-progress"></div>
       <div class="workflow-grid">
         <article class="workflow-panel">
           <div class="panel-title"><span>02</span><div><b>Datos del negocio</b><small>Se guardan cifrados en este dispositivo</small></div></div>
@@ -284,6 +284,12 @@ export function mountWorkflow() {
     } catch {
       cryptoKey=null; caseData=null; $("#vault-note").textContent="No se pudo desbloquear. Comprueba la contraseña. No se envió ningún dato.";
     }
+  });
+  $("#lock-vault").addEventListener("click",()=>{
+    cryptoKey=null; caseData=null;
+    $("#workflow-content").classList.add("hidden"); $("#vault-card").classList.remove("hidden");
+    $("#vault-password").value=""; $("#vault-note").textContent="Bóveda bloqueada. Introduce tu contraseña para volver a abrir el expediente.";
+    $("#vault-submit").textContent="Desbloquear expediente cifrado";
   });
   $("#case-form").addEventListener("submit", async (event)=>{
     event.preventDefault();
