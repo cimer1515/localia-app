@@ -4,7 +4,7 @@ import { JsonRpcProvider, Wallet, ContractFactory } from "ethers";
 
 const rpcUrl = process.env.ME_EVM_RPC_URL;
 const privateKey = process.env.ME_DEPLOYER_PRIVATE_KEY;
-const expectedChainId = Number(process.env.ME_EVM_CHAIN_ID || 400);
+const chainIdSetting = process.env.ME_EVM_CHAIN_ID;\nif (!chainIdSetting) throw new Error("Set ME_EVM_CHAIN_ID after confirming the official current ME Network chain ID.");\nconst expectedChainId = Number(chainIdSetting);
 if (!rpcUrl || !privateKey) {
   throw new Error("Set ME_EVM_RPC_URL and ME_DEPLOYER_PRIVATE_KEY in your local .env file.");
 }
