@@ -301,9 +301,12 @@ function renderReviewer() {
     }
     const missing = requiredMissing(caseData.form || {});
     const attachedFiles = (caseData.documents || []).filter(d => d.encryptedPayload);
-    const missingDocs = attachedFiles.length < 2
-      ? ["Adjuntar al menos 2 documentos de respaldo para la demostración (por ejemplo, croquis y documento de respaldo)."]
-      : [];
+    const requiredTypes=requiredDocTypes();
+    const missingDocs=requiredTypes.filter(type=>!attachedFiles.some(d=>d.type===type)).map(type=>"Adjuntar archivo requerido: "+type+".");
+    const reviewed=caseData.reviewedItems||{};
+    const reviewItems=generatedDocuments();
+    const reviewChecklistHtml="<div class=\"review-checklist\"><b>Verificación de documentos generados</b>"+reviewItems.map(d=>"<label><input type=\"checkbox\" class=\"review-item-check\" data-review-item=\""+d.key+"\" "+(reviewed[d.key]?"checked":"")+"> Confirmo que revisé: "+escapeHtml(d.title)+"</label>").join("")+"</div>";
+    const planReviewHtml="<div class=\"review-plan-image\"><b>Plano enviado por el usuario</b><img alt=\"Plano de revisión\" src=\"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(planSvg())+"\"></div>";
     const notes = caseData.form?.notes || "";
     area.innerHTML = `<div class="review-record"><div><span class="review-label">Expediente</span><b>${escapeHtml(caseData.id)}</b></div><div><span class="review-label">Negocio</span><b>${escapeHtml(caseData.form.businessName)}</b></div><div><span class="review-label">Responsable</span><b>${escapeHtml(caseData.form.ownerName)}</b></div><div><span class="review-label">Ubicación</span><b>${escapeHtml(caseData.form.address)}, ${escapeHtml(caseData.form.city)}</b></div><div><span class="review-label">Actividad</span><b>${escapeHtml(caseData.form.activity)}</b></div><div><span class="review-label">Área</span><b>${escapeHtml(caseData.form.area)} m²</b></div><div><span class="review-label">Documentos declarados</span><b>${(caseData.documents||[]).map(d=>escapeHtml(d.type||"Documento")+": "+escapeHtml(d.name)+(d.fileName?" (archivo adjunto)":" (sin archivo)")).join(", ")||"No adjuntados"}</b></div><div><span class="review-label">Notas del usuario</span><b>${escapeHtml(notes)||"Sin notas"}</b></div></div>
       <div class="review-files"><b>Archivos disponibles para revisión</b>${(caseData.documents||[]).map((d,i)=>`<div><span>${escapeHtml(d.type||"Documento")}: ${escapeHtml(d.name)} · ${escapeHtml(d.fileName||"sin archivo")}</span><button class="secondary-btn review-file-btn" id="review-file-${i}" ${d.encryptedPayload?"":"disabled"}>Descargar para revisar</button></div>`).join("")||"<p>El usuario no añadió documentos.</p>"}</div>
