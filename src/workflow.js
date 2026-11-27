@@ -130,7 +130,7 @@ function renderShell() {
       <article class="workflow-panel requirements-panel">
         <div class="panel-title"><span>04</span><div><b>Requisitos y documentos</b><small>Checklist orientativo; no confirma requisitos oficiales</small></div></div>
         <div class="requirements-output" id="requirements-output"></div>
-        <div class="document-add"><label>Nombre del documento<input id="document-name" maxlength="120" placeholder="Ej. Croquis del local / documento..."></label><label>Archivo PDF o imagen (máx. 1 MB)<input id="document-file" type="file" accept=".pdf,image/png,image/jpeg,image/webp"></label><button class="secondary-btn" id="add-document" type="button">Cifrar y añadir</button></div>
+        <div class="document-add"><label>Tipo de documento<select id="document-type"><option>Croquis / plano</option><option>Documento del responsable</option><option>Respaldo de ubicación del local</option><option>Documento sanitario</option><option>Otro documento</option></select></label><label>Nombre del documento<input id="document-name" maxlength="120" placeholder="Nombre o referencia del documento"></label><label>Archivo PDF o imagen (máx. 1 MB)<input id="document-file" type="file" accept=".pdf,image/png,image/jpeg,image/webp"></label><button class="secondary-btn" id="add-document" type="button">Cifrar y añadir</button></div>
         <p class="form-feedback" id="document-feedback" aria-live="polite"></p>
       </article>
       <article class="workflow-panel submission-panel">
@@ -172,7 +172,7 @@ function renderRequirements() {
   const form = caseData.form || {};
   const reqs = caseData.requirements?.length ? caseData.requirements : requirementList(form);
   $("#requirements-output").innerHTML = `<ul class="workflow-checklist">${reqs.map((r,i)=>`<li><span>${String(i+1).padStart(2,"0")}</span>${escapeHtml(r)}</li>`).join("")}</ul>
-    <div class="docs-list"><b>Documentos añadidos</b>${(caseData.documents||[]).length ? caseData.documents.map(d=>`<span>📄 ${escapeHtml(d.name)} · ${d.fileName ? "archivo cifrado adjunto" : "solo referencia, sin archivo"}</span>`).join("") : "<p>Aún no has añadido documentos.</p>"}</div>`;
+    <div class="docs-list"><b>Documentos añadidos</b>${(caseData.documents||[]).length ? caseData.documents.map(d=>`<span>📄 ${escapeHtml(d.type||"Documento")} · ${escapeHtml(d.name)} · ${d.fileName ? "archivo cifrado adjunto" : "solo referencia, sin archivo"}</span>`).join("") : "<p>Aún no has añadido documentos.</p>"}</div>`;
 }
 function renderSubmission() {
   const missing = requiredMissing(caseData.form || {});
@@ -201,8 +201,8 @@ function renderReviewer() {
       ? ["Adjuntar al menos 2 documentos de respaldo para la demostración (por ejemplo, croquis y documento de respaldo)."]
       : [];
     const notes = caseData.form?.notes || "";
-    area.innerHTML = `<div class="review-record"><div><span class="review-label">Expediente</span><b>${escapeHtml(caseData.id)}</b></div><div><span class="review-label">Negocio</span><b>${escapeHtml(caseData.form.businessName)}</b></div><div><span class="review-label">Responsable</span><b>${escapeHtml(caseData.form.ownerName)}</b></div><div><span class="review-label">Ubicación</span><b>${escapeHtml(caseData.form.address)}, ${escapeHtml(caseData.form.city)}</b></div><div><span class="review-label">Actividad</span><b>${escapeHtml(caseData.form.activity)}</b></div><div><span class="review-label">Área</span><b>${escapeHtml(caseData.form.area)} m²</b></div><div><span class="review-label">Documentos declarados</span><b>${(caseData.documents||[]).map(d=>escapeHtml(d.name)+(d.fileName?" (archivo adjunto)":" (sin archivo)")).join(", ")||"No adjuntados"}</b></div><div><span class="review-label">Notas del usuario</span><b>${escapeHtml(notes)||"Sin notas"}</b></div></div>
-      <div class="review-files"><b>Archivos disponibles para revisión</b>${(caseData.documents||[]).map((d,i)=>`<div><span>${escapeHtml(d.name)} · ${escapeHtml(d.fileName||"sin archivo")}</span><button class="secondary-btn review-file-btn" id="review-file-${i}" ${d.encryptedPayload?"":"disabled"}>Descargar para revisar</button></div>`).join("")||"<p>El usuario no añadió documentos.</p>"}</div>
+    area.innerHTML = `<div class="review-record"><div><span class="review-label">Expediente</span><b>${escapeHtml(caseData.id)}</b></div><div><span class="review-label">Negocio</span><b>${escapeHtml(caseData.form.businessName)}</b></div><div><span class="review-label">Responsable</span><b>${escapeHtml(caseData.form.ownerName)}</b></div><div><span class="review-label">Ubicación</span><b>${escapeHtml(caseData.form.address)}, ${escapeHtml(caseData.form.city)}</b></div><div><span class="review-label">Actividad</span><b>${escapeHtml(caseData.form.activity)}</b></div><div><span class="review-label">Área</span><b>${escapeHtml(caseData.form.area)} m²</b></div><div><span class="review-label">Documentos declarados</span><b>${(caseData.documents||[]).map(d=>escapeHtml(d.type||"Documento")+": "+escapeHtml(d.name)+(d.fileName?" (archivo adjunto)":" (sin archivo)")).join(", ")||"No adjuntados"}</b></div><div><span class="review-label">Notas del usuario</span><b>${escapeHtml(notes)||"Sin notas"}</b></div></div>
+      <div class="review-files"><b>Archivos disponibles para revisión</b>${(caseData.documents||[]).map((d,i)=>`<div><span>${escapeHtml(d.type||"Documento")}: ${escapeHtml(d.name)} · ${escapeHtml(d.fileName||"sin archivo")}</span><button class="secondary-btn review-file-btn" id="review-file-${i}" ${d.encryptedPayload?"":"disabled"}>Descargar para revisar</button></div>`).join("")||"<p>El usuario no añadió documentos.</p>"}</div>
       <label>Observaciones / correcciones<textarea id="review-notes" rows="3" placeholder="Indica exactamente qué falta o qué debe corregirse"></textarea></label>
       ${missing.length || missingDocs.length ? `<div class="missing-note">Pendientes detectados: ${[...missing,...missingDocs].map(escapeHtml).join(" · ")}</div>` : ""}
       <div class="review-actions"><button class="secondary-btn" id="request-corrections">Emitir documento de corrección</button><button class="primary-btn" id="approve-case">Aprobar expediente demo</button></div>
@@ -317,7 +317,7 @@ export function mountWorkflow() {
     if(caseData.documents.length>=5){$("#document-feedback").textContent="La demo admite hasta 5 archivos por expediente.";return;}
     let fileData=null;
     if(file){const bytes=new Uint8Array(await file.arrayBuffer());fileData=toBase64(bytes);}
-    caseData.documents.push({name,fileName:file?.name||"",mimeType:file?.type||"",encryptedPayload:fileData,addedAt:new Date().toISOString(),status:"declarado"});
+    caseData.documents.push({type:$("#document-type").value,name,fileName:file?.name||"",mimeType:file?.type||"",encryptedPayload:fileData,addedAt:new Date().toISOString(),status:"declarado"});
     $("#document-name").value=""; $("#document-file").value=""; await saveEncryptedCase(); renderRequirements();
     $("#document-feedback").textContent="Añadido. El contenido del archivo queda dentro del expediente cifrado en este navegador. Límite demo: 400 KB por archivo, hasta 5 archivos.";
   });
