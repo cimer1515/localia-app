@@ -1,4 +1,5 @@
 import "./style.css";
+import { connectMEWallet } from "./me-network.js";
 
 const app = document.querySelector("#app");
 
@@ -52,6 +53,13 @@ app.innerHTML = `
       </div>
     </section>
     <section class="feature-strip" id="como-funciona"><div><span>01</span><b>Conoce tus requisitos</b><small>Una ruta según tu actividad y ubicación.</small></div><div><span>02</span><b>Organiza tus documentos</b><small>Checklist para avanzar paso a paso.</small></div><div><span>03</span><b>Visualiza tu local</b><small>Distribución y señalética sugerida.</small></div></section>
+    <section class="network-section" id="me-network">
+      <div class="network-card">
+        <div class="network-badge"><span class="live-dot"></span> ME NETWORK · EVM</div>
+        <div class="network-content"><h2>Certificados con <em>integridad verificable.</em></h2><p>LOCALIA prepara el registro de huellas digitales de documentos en ME Network. El archivo original permanece fuera de la blockchain.</p></div>
+        <div class="network-action"><button class="primary-btn" id="me-connect-btn" type="button">Conectar wallet <span>↗</span></button><div id="me-connect-status" class="network-status" aria-live="polite">Testnet · chain ID 400 configurado como referencia</div></div>
+      </div>
+    </section>
     <section class="tool-section" id="herramienta">
       <div class="section-heading"><div><div class="eyebrow">PRIMERA HERRAMIENTA</div><h2>Comienza a preparar<br><em>tu establecimiento.</em></h2></div><p>Cuéntanos lo básico. LOCALIA generará una guía inicial para que sepas qué revisar y cómo organizar tu espacio.</p></div>
       <div class="tool-card">
@@ -68,6 +76,27 @@ app.innerHTML = `
   </main>
   <footer><a class="brand footer-brand" href="#top"><span class="brand-mark">L</span><span>LOCALIA<small>BUSINESS SETUP</small></span></a><span>Construyendo el camino para abrir tu negocio.</span><span>Hackathon prototype · 2026</span></footer>
 `;
+
+const meConnectButton = document.querySelector("#me-connect-btn");
+meConnectButton.addEventListener("click", async () => {
+  const status = document.querySelector("#me-connect-status");
+  meConnectButton.disabled = true;
+  meConnectButton.innerHTML = "Conectando…";
+  status.textContent = "Confirma la conexión en tu wallet.";
+  status.classList.remove("is-error");
+  try {
+    const connection = await connectMEWallet();
+    status.textContent = `Wallet conectada: ${connection.address.slice(0, 6)}…${connection.address.slice(-4)} · chain ID ${connection.chainId}`;
+    status.classList.add("is-connected");
+    meConnectButton.innerHTML = "Wallet conectada ✓";
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : String(error);
+    status.classList.add("is-error");
+    meConnectButton.innerHTML = "Intentar conectar de nuevo ↗";
+  } finally {
+    meConnectButton.disabled = false;
+  }
+});
 
 const form = document.querySelector("#business-form");
 form.addEventListener("submit", (event) => {
