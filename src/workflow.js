@@ -189,9 +189,84 @@ function formFromCase() {
   if (caseData.plan) { $("#plan-width").value = caseData.plan.width; $("#plan-depth").value = caseData.plan.depth; }
   updatePlanLabel();
 }
+function ensurePlan() {
+  if (!caseData.plan) {
+    const area = Number(caseData.form?.area) || 48;
+    const width = Number((Math.sqrt(area * 1.25)).toFixed(1));
+    caseData.plan = {width,depth:Number((area/width).toFixed(1)),cells:{"11":"kitchen","18":"restroom","21":"storage","44":"public","65":"counter","70":"entrance","9":"exit","38":"fire"}};
+  }
+  if (!caseData.plan.cells) caseData.plan.cells = {};
+}
+function planSvg() {
+  ensurePlan();
+  const W=800,H=480,CW=80,CH=60,cells=caseData.plan.cells||{};
+  let s='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><rect width="800" height="480" fill="#ffffff"/><rect x="3" y="3" width="794" height="474" rx="4" fill="none" stroke="#203854" stroke-width="6"/>';
+  for(let r=0;r<8;r++) for(let col=0;col<10;col++){
+    const idx=String(r*10+col),key=cells[idx],a=AREA_TYPES[key];
+    if(key&&a) s+='<rect x="'+(col*CW+5)+'" y="'+(r*CH+5)+'" width="70" height="50" rx="5" fill="'+a.color+'" stroke="#b9c8d9" stroke-width="1.5"/>';
+    else s+='<rect x="'+(col*CW+5)+'" y="'+(r*CH+5)+'" width="70" height="50" rx="2" fill="#f8fafc" stroke="#e1e8f0" stroke-width="1"/>';
+    if(key&&a) s+='<text x="'+(col*CW+40)+'" y="'+(r*CH+25)+'" text-anchor="middle" font-size="17" font-family="Arial">'+a.icon+'</text><text x="'+(col*CW+40)+'" y="'+(r*CH+42)+'" text-anchor="middle" font-size="8" font-weight="bold" fill="#32465f">'+a.label.toUpperCase()+'</text>';
+  }
+  const findCell=(type)=>{const k=Object.keys(cells).find(i=>cells[i]===type);return k===undefined?null:{x:(Number(k)%10)*CW+40,y:Math.floor(Number(k)/10)*CH+30};};
+  const ent=findCell("entrance"),ext=findCell("exit"),pub=findCell("public")||findCell("counter");
+  if(ent&&ext){
+    const mid=pub||{x:(ent.x+ext.x)/2,y:(ent.y+ext.y)/2};
+    s+='<path d="M '+ent.x+' '+ent.y+' L '+mid.x+' '+ent.y+' L '+mid.x+' '+mid.y+' L '+ext.x+' '+mid.y+' L '+ext.x+' '+ext.y+'" fill="none" stroke="#15936b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="13 8"/>';
+    s+='<text x="'+(ent.x+8)+'" y="'+(ent.y-10)+'" font-size="12" font-weight="bold" fill="#15835e">FLUJO</text>';
+  }
+  Object.keys(cells).forEach(k=>{const a=AREA_TYPES[cells[k]];if(!a)return;const col=Number(k)%10,row=Math.floor(Number(k)/10),x=col*CW+62,y=row*CH+14;s+='<circle cx="'+x+'" cy="'+y+'" r="12" fill="#d93e43" stroke="#fff" stroke-width="2"/><text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">S</text>';});
+  s+='<text x="18" y="468" font-size="10" fill="#687b93">LOCALIA · CROQUIS REFERENCIAL · NO ES PLANO TÉCNICO</text></svg>';
+  return s;
+}
+function renderPlan() {
+  ensurePlan();
+  const width=Number($("#plan-width").value)||caseData.plan.width||8,depth=Number($("#plan-depth").value)||caseData.plan.depth||6;
+  caseData.plan.width=width;caseData.plan.depth=depth;
+  $("#plan-measure-label").textContent="Croquis "+width.toFixed(1)+" m × "+depth.toFixed(1)+" m · "+(width*depth).toFixed(1)+" m² · 80 celdas editables";
+  const cells=caseData.plan.cells;
+  let html="";
+  for(let i=0;i<80;i++){const key=cells[String(i)],a=AREA_TYPES[key];html+='<button type="button" class="plan-cell '+(a?"filled":"")+'" data-cell="'+i+'" title="'+(a?a.label:"Celda vacía")+'" style="background:'+(a?a.color:"#f8fafc")+'">'+(a?a.icon:"")+'</button>';}
+  $("#editable-plan").innerHTML=html;
+  const svg=planSvg();
+  $("#plan-visual-preview").innerHTML='<img alt="Plano con distribución, señalética y ruta de circulación" src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)+'"/>';
+  $("#editable-plan").querySelectorAll("[data-cell]").forEach(btn=>btn.addEventListener("click",async()=>{
+    const idx=btn.getAttribute("data-cell"),tool=$("#plan-tool").value;
+    if(tool==="entrance"||tool==="exit") Object.keys(caseData.plan.cells).forEach(k=>{if(caseData.plan.cells[k]===tool)delete caseData.plan.cells[k];});
+    caseData.plan.cells[idx]=tool;renderPlan();await saveEncryptedCase();
+  }));
+}
+async function downloadPlanPng() {
+  const svg=planSvg(),blob=new Blob([svg],{type:"image/svg+xml;charset=utf-8"}),url=URL.createObjectURL(blob),img=new Image();
+  img.onload=()=>{const canvas=document.createElement("canvas");canvas.width=1600;canvas.height=960;const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(png=>{if(!png)return;const link=document.createElement("a");link.href=URL.createObjectURL(png);link.download="LOCALIA-plano-senaletica.png";link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);},"image/png");};
+  img.onerror=()=>URL.revokeObjectURL(url);img.src=url;
+}
+function generatedDocuments() {
+  const type=caseData.form?.businessType||"cafe";
+  const list=[
+    {key:"application",title:"Solicitud de permiso de funcionamiento (borrador)",scope:"Datos del negocio, titular y ubicación"},
+    {key:"responsible",title:"Declaración del responsable (borrador)",scope:"Datos declarados por el usuario"},
+    {key:"layout",title:"Croquis, señalética y flujo (borrador)",scope:"Distribución seleccionada del local"},
+    {key:"requirements",title:"Checklist de requisitos por actividad",scope:"Lista orientativa para validar con la entidad"},
+    {key:"safety",title:"Ficha de preparación de seguridad (borrador)",scope:"Salida, extintor, accesibilidad y circulación"}
+  ];
+  if(type==="cafe")list.push({key:"sanitary",title:"Ficha de preparación sanitaria (borrador)",scope:"Actividad de alimentos; confirmar requisitos oficiales"});
+  if(type==="shop")list.push({key:"commercial",title:"Ficha documental comercial (borrador)",scope:"Documentación comercial / tributaria aplicable"});
+  return list;
+}
+function renderGeneratedDocuments() {
+  const target=$("#generated-documents");if(!target)return;
+  const form=caseData.form||{},docs=generatedDocuments();
+  target.innerHTML='<div class="generated-doc-intro">Se prepararán '+docs.length+' documentos de trabajo según el tipo de negocio. Puedes abrirlos antes de completar los datos.</div>'+docs.map(d=>'<div class="generated-doc-row"><div><b>'+escapeHtml(d.title)+'</b><small>'+escapeHtml(d.scope)+'</small></div><button class="secondary-btn" type="button" data-doc-preview="'+d.key+'">Ver borrador</button></div>').join("")+'<div id="document-preview-area"></div>';
+  target.querySelectorAll("[data-doc-preview]").forEach(btn=>btn.addEventListener("click",()=>{
+    const doc=docs.find(d=>d.key===btn.getAttribute("data-doc-preview"));if(!doc)return;
+    const filled=!!(form.businessName&&form.activity&&form.city&&form.address&&form.ownerName);
+    const body='<div class="document-preview"><div class="doc-preview-head">LOCALIA · DOCUMENTO DE PREPARACIÓN · NO OFICIAL</div><h3>'+escapeHtml(doc.title)+'</h3><p><b>Negocio:</b> '+escapeHtml(form.businessName||"[Nombre del negocio por completar]")+'</p><p><b>Actividad:</b> '+escapeHtml(form.activity||"[Actividad por completar]")+'</p><p><b>Responsable:</b> '+escapeHtml(form.ownerName||"[Responsable por completar]")+'</p><p><b>Ubicación:</b> '+escapeHtml(form.address||"[Dirección por completar]")+', '+escapeHtml(form.city||"[Ciudad]")+'</p><p><b>Área:</b> '+escapeHtml(form.area||"[Área en m²]")+'</p><p><b>Contenido:</b> '+escapeHtml(doc.scope)+'</p><p><b>Estado:</b> '+(filled?"Borrador prellenado · revisar antes de entregar":"Plantilla previa · faltan datos")+'</p><div class="doc-preview-notice">Este documento es una plantilla de preparación de LOCALIA. No es un certificado emitido ni sustituye el formulario oficial de la entidad competente.</div><button class="secondary-btn" id="print-preview-doc" type="button">Imprimir / guardar PDF</button></div>';
+    $("#document-preview-area").innerHTML=body;$("#print-preview-doc").addEventListener("click",()=>window.print());
+  }));
+}
 function renderRequirements() {
   const form = caseData.form || {};
-  const reqs = caseData.requirements?.length ? caseData.requirements : requirementList(form);
+  const reqs = caseData.requirements?.length ? caseData.requirements : requirementList(form);\n  renderGeneratedDocuments();
   $("#requirements-output").innerHTML = `<ul class="workflow-checklist">${reqs.map((r,i)=>`<li><span>${String(i+1).padStart(2,"0")}</span>${escapeHtml(r)}</li>`).join("")}</ul>
     <div class="docs-list"><b>Documentos añadidos</b>${(caseData.documents||[]).length ? caseData.documents.map(d=>`<span>📄 ${escapeHtml(d.type||"Documento")} · ${escapeHtml(d.name)} · ${d.fileName ? "archivo cifrado adjunto" : "solo referencia, sin archivo"}</span>`).join("") : "<p>Aún no has añadido documentos.</p>"}</div>`;
 }
@@ -285,7 +360,7 @@ async function renderCertificate() {
 }
 function renderAll() {
   $("#vault-card").classList.add("hidden"); $("#workflow-content").classList.remove("hidden");
-  renderProgress(); formFromCase(); renderRequirements(); renderSubmission();
+  renderProgress(); formFromCase(); renderPlan(); renderRequirements(); renderSubmission();
   $("#reviewer-workspace").classList.add("hidden");
   if (caseData.status==="approved") issueDemoCertificate().then(()=>{renderAll();});
   renderCertificate();
