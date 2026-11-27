@@ -1,14 +1,22 @@
 {
   "name": "localia-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "compile:contract": "node --env-file=.env scripts/compile-contract.js",
+    "deploy:me-testnet": "node --env-file=.env scripts/deploy-contract.js"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0",
+    "meta-earth-js-sdk": "1.0.0"
   },
   "devDependencies": {
+    "dotenv": "^16.4.7",
+    "solc": "^0.8.30",
     "vite": "^6.4.1"
   }
 }
