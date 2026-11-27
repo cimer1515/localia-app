@@ -189,12 +189,12 @@ function renderReviewer() {
     const notes = caseData.form?.notes || "";
     area.innerHTML = `<div class="review-record"><div><span class="review-label">Expediente</span><b>${escapeHtml(caseData.id)}</b></div><div><span class="review-label">Negocio</span><b>${escapeHtml(caseData.form.businessName)}</b></div><div><span class="review-label">Responsable</span><b>${escapeHtml(caseData.form.ownerName)}</b></div><div><span class="review-label">Ubicación</span><b>${escapeHtml(caseData.form.address)}, ${escapeHtml(caseData.form.city)}</b></div><div><span class="review-label">Actividad</span><b>${escapeHtml(caseData.form.activity)}</b></div><div><span class="review-label">Área</span><b>${escapeHtml(caseData.form.area)} m²</b></div><div><span class="review-label">Documentos declarados</span><b>${(caseData.documents||[]).map(d=>escapeHtml(d.name)+(d.fileName?" (archivo adjunto)":" (sin archivo)")).join(", ")||"No adjuntados"}</b></div><div><span class="review-label">Notas del usuario</span><b>${escapeHtml(notes)||"Sin notas"}</b></div></div>
       <label>Observaciones / correcciones<textarea id="review-notes" rows="3" placeholder="Indica exactamente qué falta o qué debe corregirse"></textarea></label>
-      ${missing.length ? `<div class="missing-note">Campos faltantes detectados automáticamente: ${missing.map(escapeHtml).join(", ")}</div>` : ""}
+      ${missing.length || missingDocs.length ? `<div class="missing-note">Pendientes detectados: ${[...missing,...missingDocs].map(escapeHtml).join(" · ")}</div>` : ""}
       <div class="review-actions"><button class="secondary-btn" id="request-corrections">Emitir documento de corrección</button><button class="primary-btn" id="approve-case">Aprobar expediente demo</button></div>
       <p class="demo-warning">La aprobación aquí es simulada y no constituye aprobación municipal ni certificado oficial.</p>`;
     $("#request-corrections").addEventListener("click", async () => {
       const reviewerNotes = $("#review-notes").value.trim();
-      caseData.corrections = [...missing.map(m=>`Completar o corregir: ${m}`), ...(reviewerNotes ? [reviewerNotes] : [])];
+      caseData.corrections = [...missing.map(m=>`Completar o corregir: ${m}`), ...missingDocs.map(m=>`Documento requerido: ${m}`), ...(reviewerNotes ? [reviewerNotes] : [])];
       if (!caseData.corrections.length) caseData.corrections.push("La entidad solicita revisar y completar los documentos de respaldo indicados en el checklist.");
       caseData.status = "corrections";
       caseData.correctionIssuedAt = new Date().toISOString();
@@ -204,8 +204,8 @@ function renderReviewer() {
       $("#print-correction").addEventListener("click",()=>window.print());
     });
     $("#approve-case").addEventListener("click", async () => {
-      if (requiredMissing(caseData.form).length || caseData.corrections.length) {
-        $("#reviewer-feedback").textContent = "No se puede aprobar: primero resuelve los campos o correcciones pendientes.";
+      if (requiredMissing(caseData.form).length || (caseData.documents||[]).filter(d=>d.encryptedPayload).length<2 || caseData.corrections.length) {
+        $("#reviewer-feedback").textContent = "No se puede aprobar: primero resuelve los campos, adjunta 2 archivos de respaldo de demo y cierra las correcciones.";
         return;
       }
       caseData.status = "approved"; caseData.approvedAt = new Date().toISOString(); caseData.approvingEntity = DEMO_ISSUER;
