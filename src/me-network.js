@@ -72,20 +72,3 @@ export async function revokeCredential(credentialId) {
   const tx = await registry.revokeCredential(credentialId);
   return await tx.wait();
 }
-
-/// Official Meta Earth SDK initialization for SDK-supported network/account features.
-/// Configure an HTTPS RPC in VITE_ME_EVM_RPC_URL before calling this from a hosted HTTPS app.
-export async function createMetaEarthSdk() {
-  const rpcUrl = import.meta.env.VITE_ME_EVM_RPC_URL;
-  if (!rpcUrl) throw new Error("Configura VITE_ME_EVM_RPC_URL (HTTPS) antes de inicializar el SDK.");
-  const sdk = new MetaEarthSDK({
-    config: {
-      network: import.meta.env.VITE_ME_NETWORK || "testnet",
-      evmRpcUrl: rpcUrl,
-      evmChainId: expectedChainId,
-      debug: false
-    }
-  });
-  await sdk.initialize();
-  return sdk;
-}
