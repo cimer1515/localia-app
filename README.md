@@ -1,59 +1,71 @@
-# LOCALIA
+# LOCALIA — Business Setup & Compliance Assistant
 
-**Business Setup & Compliance Assistant**
+LOCALIA ayuda a emprendedores a preparar la apertura de un negocio: organiza datos del establecimiento, crea un checklist orientativo, permite armar un croquis preliminar y conduce un expediente por revisión, correcciones y aprobación.
 
-LOCALIA ayuda a emprendedores a preparar la apertura de su negocio mediante una guía de requisitos según actividad y ubicación, organización documental y un esquema visual inicial del local con señalética sugerida.
+## Flujo de la demostración
 
-## Estado del prototipo
-- Landing page responsive
-- Formulario inicial para cafetería, tienda u oficina
-- Checklist orientativo y esquema de local
-- Panel de conexión de wallet EVM
-- Contrato Solidity para registrar/verificar hash de credenciales y revocarlas
-- Scripts de compilación y despliegue a un RPC EVM configurado
+1. El usuario crea una bóveda con contraseña.
+2. Ingresa la información del negocio y guarda un expediente cifrado localmente.
+3. Ajusta el croquis ilustrativo y agrega archivos de respaldo (máximo 1 MB por archivo en esta demo).
+4. Envía el expediente al panel de la entidad de prueba.
+5. La entidad demo puede emitir un documento de corrección o aprobar. LOCALIA no aprueba permisos por sí sola.
+6. Tras la aprobación de la entidad demo, se genera una constancia de demostración imprimible con QR y hash SHA-256.
 
-> Prototipo informativo. No emite permisos oficiales ni sustituye planos técnicos, inspecciones o validación de la autoridad competente.
+## Entidad de prueba
 
-## Stack compatible con Meta Earth
-- Frontend: JavaScript con Vite
-- Smart contract: Solidity para la EVM de ME Network
-- Integración EVM actual: ethers.js para wallet y llamadas al contrato Solidity
-- Meta Earth JS SDK oficial se mantiene como integración opcional futura; no es dependencia de la primera compilación web
-- Herramienta de compilación del contrato: solc-js
+- Nombre: **Entidad demostrativa LOCALIA (no oficial)**.
+- Código de acceso demo: `LOCALIA-DEMO-2026`.
+- Solo sirve para mostrar el flujo en el mismo navegador/dispositivo.
+- No es una entidad pública, no representa una autoridad de Ecuador y no emite permisos legales.
+- La aprobación y constancia son simuladas; no deben presentarse como un certificado oficial.
 
-Meta Earth anunció compatibilidad EVM para ME Network mainnet en septiembre de 2026. El SDK oficial documenta operaciones EVM y exige configurar explícitamente RPC y chain ID para mainnet.
+## Privacidad en esta versión
 
-## Preparación local
-1. Instala Node.js 20+.
-2. Clona el repositorio y ejecuta:
-   ```bash
-   npm install
-   ```
-3. Copia `.env.example` a `.env`.
-4. Para compilar el contrato:
-   ```bash
-   npm run compile:contract
-   ```
-5. Para desplegar en testnet, completa el RPC oficial vigente, chain ID y una clave de prueba en `.env`, y ejecuta:
-   ```bash
-   npm run deploy:me-testnet
-   ```
-6. Copia la dirección del contrato desplegado en `VITE_LOCALIA_REGISTRY_ADDRESS` dentro de `.env`, y configura también las variables `VITE_*` necesarias para Vite.
+- Los datos del expediente y el contenido de archivos adjuntos se cifran con AES-GCM en el navegador.
+- La clave se deriva de una contraseña con PBKDF2; la contraseña no se guarda.
+- El expediente cifrado se guarda en el almacenamiento local del navegador, no en un servidor ni en ME Network.
+- El usuario debe recordar la contraseña. Si la pierde, este prototipo no puede recuperar los datos.
+- La entidad demo solo puede revisar el expediente desbloqueado en el mismo navegador. Esto es una simulación, no un control de acceso institucional seguro.
+- No ingreses datos reales sensibles ni documentos reales en la demo pública.
 
-No uses claves privadas de mainnet. Nunca subas el archivo `.env` a GitHub.
+## Importante: seguridad y producción
 
-## Netlify
+El almacenamiento local cifrado es solo una solución demostrativa. Para que una entidad real revise expedientes desde otro equipo, LOCALIA necesitará un backend seguro con:
+- autenticación de usuario y de entidad;
+- autorización por expediente, acceso mínimo y registro de auditoría;
+- cifrado en tránsito y cifrado de archivos en almacenamiento con gestión de claves;
+- compartir solo los datos necesarios con la entidad durante la revisión;
+- política de conservación, revocación de acceso y eliminación;
+- revisión de seguridad y cumplimiento de la normativa de protección de datos aplicable.
+
+No es posible ocultar los datos necesarios a la entidad que debe revisarlos y, al mismo tiempo, pedirle que certifique su veracidad. La privacidad correcta es mantenerlos privados del público y permitir acceso limitado, justificado y auditado a la entidad autorizada.
+
+## ME Network
+
+La blockchain se usa únicamente después de la aprobación de la entidad autorizada:
+- registrar un identificador opaco y hash del certificado final;
+- no registrar nombres, identificación, dirección, archivos ni información personal;
+- el QR de la demo contiene un identificador y hash de demostración, no una verificación blockchain activa.
+
+El contrato Solidity de registro de credenciales está en `contracts/LocaliaCredentialRegistry.sol`. Antes de usarlo se debe confirmar el RPC HTTPS y chain ID oficial vigente, desplegar en testnet, autorizar al emisor real y auditar el contrato.
+
+## Desarrollo
+
+- Frontend: JavaScript + Vite
+- EVM: ethers.js
+- Contrato: Solidity
+- QR: paquete qrcode
+
+```bash
+npm install
+npm run dev
+npm run build
+```
+
+Build Netlify:
 - Build command: `npm run build`
 - Publish directory: `dist`
-- Configura las variables `VITE_*` en Netlify. Estas variables se incluyen en el frontend y no deben contener secretos.
 
-## Privacidad y seguridad
-LOCALIA guarda únicamente hashes de documentos e identificadores opacos en la blockchain. Los documentos originales y datos personales deben permanecer fuera de la cadena. Un hash prueba integridad, no que una entidad haya emitido legalmente el documento.
+## Estado
 
-Antes de despliegue real: confirmar RPC HTTPS y chain ID con Meta Earth, probar en testnet, revisar permisos del contrato y auditar seguridad.
-
-## Fuentes
-- [Meta Earth Developer Center](https://www.mec.me/en-US/developer-center)
-- [ME Network EVM compatibility announcement](https://www.mec.me/en-US/developer-blog/me-network-goes-evm-compatible-embracing-the-ethereum-ecosys)
-- [Official Meta Earth JS SDK](https://github.com/openmetaearth/meta-earth-js-sdk)
-- [Integration notes](docs/ME-NETWORK-INTEGRATION.md)
+Prototipo de hackathon. Los requisitos son orientativos y deben contrastarse con las fuentes oficiales de cada municipio y organismo. No sustituye planos técnicos, inspecciones, asesoría profesional ni aprobación de autoridad competente.
