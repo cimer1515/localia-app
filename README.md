@@ -9,15 +9,24 @@ LOCALIA ayuda a emprendedores a preparar la apertura de un negocio: organiza dat
 3. Coloca las áreas del local en un plano de 10×8 celdas, revisa el flujo y la señalética, descarga el plano como PNG o lo adjunta cifrado al expediente. La distribución es personalizada, no un plano técnico.
 4. Envía el expediente al panel de la entidad de prueba.
 5. La entidad demo puede emitir un documento de corrección o aprobar. LOCALIA no aprueba permisos por sí sola.
-6. La entidad debe verificar cada documento generado, revisar el plano y confirmar que estén adjuntos los respaldos requeridos por el tipo de negocio.\n7. Tras la aprobación demo, se generan tres constancias separadas, cada una con QR e identificador y hash SHA-256.
+6. La entidad debe verificar cada documento generado, revisar el plano y confirmar que estén adjuntos los respaldos requeridos por el tipo de negocio.
+7. Tras la aprobación demo, se generan tres constancias separadas, cada una con QR e identificador y hash SHA-256.
 
-## Documentos previos y certificados demo\n\nAl elegir actividad, LOCALIA prepara borradores y vistas previas de la solicitud, declaración del responsable, croquis/señalética, checklist y fichas de preparación de seguridad y, cuando corresponde, sanitaria o comercial. También permite ver modelos de tres constancias que la entidad demo emitiría después de aprobar. Son plantillas de preparación, no permisos ni certificados oficiales.\n\n## Entidad de prueba
+## Documentos previos y certificados demo
+
+Al elegir actividad, LOCALIA prepara borradores y vistas previas de la solicitud, declaración del responsable, croquis/señalética, checklist y fichas de preparación de seguridad y, cuando corresponde, sanitaria o comercial. También permite ver modelos de tres constancias que la entidad demo emitiría después de aprobar. Son plantillas de preparación, no permisos ni certificados oficiales.
+
+## Entidad de prueba
 
 - Nombre: **Entidad demostrativa LOCALIA (no oficial)**.
 - Código de acceso demo: `LOCALIA-DEMO-2026`.
 - Solo sirve para mostrar el flujo en el mismo navegador/dispositivo.
 - No es una entidad pública, no representa una autoridad de Ecuador y no emite permisos legales.
 - La entidad demo exige adjuntar los tipos de archivo requeridos para la actividad y marcar como revisados todos los documentos generados. Si algo falta, emite correcciones. Después de aprobar, se generan tres constancias de demostración no oficiales.
+
+## Límites de archivos en la demo
+
+Hasta 8 archivos adjuntos de máximo 180 KB cada uno. El plano generado puede adjuntarse directamente al expediente cifrado.
 
 ## Privacidad en esta versión
 
