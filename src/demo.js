@@ -1,145 +1,76 @@
 import QRCode from "qrcode";
 import "./demo.css";
 
-const root = document.querySelector("#localia-demo");
-const STORE = "localia-applicant-demo-v2";
-const initial = { stage: 0, business: {}, docs: [], areas: [], plan: "", files: {}, checks: [], prepNotes: "", correction: "", certificates: false };
-let data;
-try { data = Object.assign({}, initial, JSON.parse(localStorage.getItem(STORE) || "{}")); } catch { data = Object.assign({}, initial); }
-const stages = ["Datos del negocio", "Formatos por completar", "En revisión", "Correcciones", "Aprobado", "Reenviado", "Certificados emitidos"];
-const safe = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
-function save() { localStorage.setItem(STORE, JSON.stringify(data)); }
-function checked(list, value) { return (list || []).includes(value) ? "checked" : ""; }
-function input(name, label, value, required = true, type = "text") {
-  return '<label class="demo-field"><span>' + label + (required ? ' <i>*</i>' : '') + '</span><input name="' + name + '" type="' + type + '" value="' + safe(value) + '"' + (required ? " required" : "") + '></label>';
-}
-function render() {
-  root.innerHTML = '<div class="demo-wrap">' +
-    '<nav class="demo-nav"><div class="demo-brand">LOCALIA<small>BUSINESS SETUP · DEMO</small></div><a class="demo-link" href="./index.html">← Volver a la app</a></nav>' +
-    '<header class="demo-hero"><span class="demo-tag">ENTIDAD DE PRUEBA · MODO DEMOSTRACIÓN</span><h1>Completa tu negocio y solicita tus certificados demo.</h1><p>Actúa como usuario: registra los datos del establecimiento, completa los formatos de prueba y envía el expediente a la entidad simulada.</p></header>' +
-    '<div class="demo-alert"><b>Entorno de prueba:</b> usa datos ficticios. La información queda guardada en este navegador. No se envía a una entidad real ni a ME Network. No conectes una wallet.</div>' +
-    '<section class="demo-panel"><h2>Tu proceso</h2><div id="demo-state" class="demo-state"></div><p id="demo-status" class="demo-feedback" aria-live="polite"></p></section>' +
-    '<section class="demo-panel" id="business-panel"><h2>1. Datos del negocio</h2><p>Completa los datos como si fueras el propietario de un establecimiento.</p><form id="business-form" class="demo-form">' +
-      input("businessName","Nombre comercial",data.business.businessName) +
-      input("activity","Actividad del negocio",data.business.activity) +
-      input("owner","Nombre del responsable",data.business.owner) +
-      input("taxId","RUC / identificación (dato ficticio)",data.business.taxId,false) +
-      input("city","Ciudad",data.business.city || "Riobamba") +
-      input("address","Dirección del establecimiento",data.business.address) +
-      input("email","Correo de contacto",data.business.email,false,"email") +
-      input("phone","Teléfono de contacto",data.business.phone,false,"tel") +
-      '<button class="demo-btn primary" type="submit">Guardar datos y continuar</button></form></section>' +
-    '<section class="demo-panel" id="forms-panel"><h2>2. Formatos demo que debes completar</h2><p>Estos son formularios de solicitud de prueba, no certificados ya emitidos. Completa cada sección y adjunta archivos de muestra si quieres probar la carga local.</p>' +
-      '<form id="requirements-form"><article class="requirement-card"><span class="form-number">FORMATO DEMO 01</span><h3>Solicitud de revisión documental</h3><p>Marca los documentos de ejemplo que incluyes en tu expediente.</p>' +
-      checkboxGroup("docs",["Registro o permiso del negocio","Identificación del responsable","Comprobante de dirección"],data.docs) +
-      '<label class="demo-field"><span>Adjuntar documento de muestra (opcional)</span><input type="file" name="docfile" accept=".pdf,.jpg,.jpeg,.png"></label><p class="file-note" id="docfile-note">' + safe(data.files.docfile || "No se ha seleccionado archivo") + '</p></article>' +
-      '<article class="requirement-card"><span class="form-number">FORMATO DEMO 02</span><h3>Plano, áreas y señalética</h3><p>Selecciona las áreas que existen en tu local. La distribución cambia según cada negocio.</p>' +
-      checkboxGroup("areas",["Cocina","Baño","Bodega / almacenamiento","Área de clientes","Entrada","Salida / evacuación","Caja / atención"],data.areas) +
-      '<label class="demo-field"><span>Describe brevemente la distribución y el flujo del local</span><textarea name="plan" required rows="3">' + safe(data.plan) + '</textarea></label>' +
-      '<label class="demo-field"><span>Adjuntar plano o imagen (opcional)</span><input type="file" name="planfile" accept=".pdf,.jpg,.jpeg,.png"></label><p class="file-note" id="planfile-note">' + safe(data.files.planfile || "No se ha seleccionado archivo") + '</p></article>' +
-      '<article class="requirement-card"><span class="form-number">FORMATO DEMO 03</span><h3>Declaración de preparación</h3><p>Marca los puntos que ya revisaste en el establecimiento.</p>' +
-      checkboxGroup("checks",["Higiene y limpieza","Seguridad básica","Señalización instalada","Circulación despejada"],data.checks) +
-      '<label class="demo-field"><span>Observaciones del usuario (opcional)</span><textarea name="prepNotes" rows="3">' + safe(data.prepNotes) + '</textarea></label></article>' +
-      '<div class="demo-actions"><button class="demo-btn primary" type="submit">Guardar formatos</button><button class="demo-btn" type="button" id="submit-review">Enviar expediente a entidad demo</button></div><p class="demo-feedback" id="forms-feedback"></p></form></section>' +
-    '<section class="demo-panel" id="review-panel"><h2>3. Revisión de entidad demo</h2><p>Este panel representa a la entidad revisora. Úsalo para simular observaciones o aprobación después de enviar el expediente.</p><div id="review-actions" class="demo-actions"></div><div id="review-feedback" class="demo-feedback"></div></section>' +
-    '<section class="demo-panel" id="cert-panel"><h2>4. Certificados de prueba</h2><p>Después de la aprobación simulada, se generan tres certificados personalizados con los datos del negocio. Puedes ver e imprimir cada uno por separado.</p><div id="certificates" class="cert-grid"><p class="demo-loading">Los certificados aparecerán cuando la entidad demo apruebe y emita el expediente.</p></div></section>' +
-    '<footer class="demo-footer">LOCALIA · Prototipo de hackathon · Documentos ficticios · Sin transacción blockchain</footer></div>';
-  renderStage();
-  bindForms();
-  renderReview();
-  if (data.certificates) buildCertificates().catch(showCertError);
-}
-function checkboxGroup(name, values, selected) {
-  return '<div class="demo-check-grid">' + values.map(value => '<label class="demo-check"><input type="checkbox" name="' + name + '" value="' + safe(value) + '" ' + checked(selected,value) + '><span>' + safe(value) + '</span></label>').join("") + '</div>';
-}
-function renderStage() {
-  document.querySelector("#demo-state").innerHTML = stages.map((name,i) => '<span class="state-pill ' + (i <= data.stage ? "active" : "") + '">' + String(i+1).padStart(2,"0") + " · " + name + "</span>").join("");
-  const status = ["Empieza registrando los datos del negocio.","Completa los tres formatos demo.","La entidad de prueba está revisando el expediente.","La entidad demo dejó observaciones. Corrige y reenvía.","Expediente aprobado en la simulación.","Expediente corregido y reenviado.","Certificados de muestra emitidos."][data.stage];
-  document.querySelector("#demo-status").textContent = status;
-  document.querySelector("#business-panel").classList.toggle("demo-muted", data.stage > 0);
-  document.querySelector("#forms-panel").classList.toggle("demo-muted", !data.business.businessName || data.stage === 6);
-  document.querySelector("#review-panel").classList.toggle("demo-muted", data.stage < 2);
-}
-function bindForms() {
-  const businessForm = document.querySelector("#business-form");
-  businessForm.addEventListener("submit", event => {
-    event.preventDefault();
-    const form = new FormData(businessForm);
-    data.business = Object.fromEntries(["businessName","activity","owner","taxId","city","address","email","phone"].map(key => [key,form.get(key)]));
-    data.stage = Math.max(data.stage,1);
-    save(); renderStage();
-    document.querySelector("#forms-panel").scrollIntoView({behavior:"smooth",block:"start"});
-  });
-  const forms = document.querySelector("#requirements-form");
-  forms.addEventListener("change", event => {
-    if (event.target.type === "file") {
-      const key = event.target.name;
-      data.files[key] = event.target.files[0] ? event.target.files[0].name : "";
-      const note = document.querySelector("#" + key + "-note");
-      if (note) note.textContent = data.files[key] || "No se ha seleccionado archivo";
-      save();
-    }
-  });
-  forms.addEventListener("submit", event => {
-    event.preventDefault(); collectRequirements(forms); save();
-    document.querySelector("#forms-feedback").textContent = "Formatos guardados en este navegador.";
-  });
-  document.querySelector("#submit-review").addEventListener("click", () => {
-    collectRequirements(forms);
-    if (!data.business.businessName || !data.business.activity || !data.business.owner || !data.business.city || !data.business.address) {
-      document.querySelector("#forms-feedback").textContent = "Primero guarda todos los datos obligatorios del negocio.";
-      document.querySelector("#business-panel").scrollIntoView({behavior:"smooth",block:"start"}); return;
-    }
-    if (data.docs.length < 3 || data.areas.length < 1 || !data.plan.trim() || data.checks.length < 4) {
-      save();
-      document.querySelector("#forms-feedback").textContent = "Completa los 3 documentos, selecciona al menos un área, describe el plano y marca los 4 puntos de preparación.";
-      return;
-    }
-    data.stage = data.stage === 3 ? 5 : 2; data.certificates = false; save(); renderStage(); renderReview();
-    document.querySelector("#review-panel").scrollIntoView({behavior:"smooth",block:"start"});
-  });
-}
-function collectRequirements(form) {
-  const formData = new FormData(form);
-  data.docs = formData.getAll("docs");
-  data.areas = formData.getAll("areas");
-  data.checks = formData.getAll("checks");
-  data.plan = formData.get("plan") || "";
-  data.prepNotes = formData.get("prepNotes") || "";
-}
-function renderReview() {
-  const target = document.querySelector("#review-actions");
-  const feedback = document.querySelector("#review-feedback");
-  if (data.stage < 2) { target.innerHTML = '<span class="review-hint">Envía primero el expediente para habilitar la revisión.</span>'; feedback.textContent = ""; return; }
-  if (data.stage === 6) { target.innerHTML = '<button class="demo-btn" id="reset-demo">Iniciar otra prueba desde cero</button>'; feedback.textContent = "Certificados de prueba emitidos."; document.querySelector("#reset-demo").addEventListener("click",resetDemo); return; }
-  if (data.stage === 4) { target.innerHTML = '<button class="demo-btn primary" id="issue-certificates">Emitir los 3 certificados demo</button>'; feedback.textContent = "La entidad demo aprobó el expediente. Emite los certificados de prueba."; document.querySelector("#issue-certificates").addEventListener("click",() => { data.stage=6; data.certificates=true; save(); renderStage(); renderReview(); buildCertificates().catch(showCertError); document.querySelector("#cert-panel").scrollIntoView({behavior:"smooth",block:"start"}); }); return; }
-  if (data.stage === 3) { target.innerHTML = '<div class="correction-note"><b>Observación de la entidad:</b> ' + safe(data.correction || "Revisa el plano y completa la información pendiente.") + '</div><button class="demo-btn primary" id="resubmit">Corregir y reenviar</button>'; feedback.textContent="Vuelve a los formatos, corrige y pulsa reenviar."; document.querySelector("#resubmit").addEventListener("click",()=>{document.querySelector("#forms-panel").scrollIntoView({behavior:"smooth",block:"start"});document.querySelector("#submit-review").textContent="Reenviar expediente corregido";}); return; }
-  target.innerHTML = '<button class="demo-btn" id="request-correction">Solicitar correcciones</button><button class="demo-btn primary" id="approve-demo">Aprobar expediente demo</button>';
-  feedback.textContent = data.stage === 5 ? "Expediente reenviado. La entidad puede aprobarlo o pedir otra corrección." : "Prueba ambos caminos: observaciones o aprobación.";
-  document.querySelector("#request-correction").addEventListener("click",()=>{data.stage=3;data.correction="Completa o revisa los formatos de documentación, plano y señalética.";save();renderStage();renderReview();});
-  document.querySelector("#approve-demo").addEventListener("click",()=>{data.stage=4;save();renderStage();renderReview();});
-}
-function resetDemo() { localStorage.removeItem(STORE); data=Object.assign({},initial); render(); window.scrollTo({top:0,behavior:"smooth"}); }
-const types = [
-  {key:"DOCUMENTAL",title:"Certificado demo de revisión documental",scope:"Revisión del checklist documental del expediente"},
-  {key:"PLANO",title:"Certificado demo de plano y señalética",scope:"Distribución de áreas y señalización declaradas"},
-  {key:"PREPARACION",title:"Certificado demo de preparación del establecimiento",scope:"Lista de preparación declarada por el usuario"}
+const root=document.querySelector("#localia-demo");
+const STORAGE="localia.single-flow.demo.v1";
+const areas=["Cocina","Baño","Bodega","Caja / atención","Área de clientes","Entrada","Salida","Extintor","Primeros auxilios","Accesibilidad"];
+const certTypes=[
+ {key:"municipal",title:"Formato demo · Solicitud de funcionamiento",scope:"Datos generales del establecimiento y responsable"},
+ {key:"safety",title:"Formato demo · Seguridad y señalética",scope:"Distribución, señalización y circulación del local"},
+ {key:"sanitary",title:"Formato demo · Revisión sanitaria / actividad",scope:"Actividad declarada y preparación del establecimiento"}
 ];
-async function buildCertificates() {
-  if (!data.certificates) return;
-  const target=document.querySelector("#certificates"); target.innerHTML="";
-  for (let i=0;i<types.length;i++) {
-    const type=types[i], id="LOCALIA-DEMO-"+type.key+"-"+String(i+1).padStart(3,"0");
-    const record={id,title:type.title,scope:type.scope,business:data.business,areas:data.areas,issuedAt:new Date().toISOString(),demo:true};
-    const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(JSON.stringify(record)));
-    const hash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
-    const qr=await QRCode.toDataURL("LOCALIA DEMO | "+id+" | SHA256:"+hash+" | NOT ON CHAIN",{width:180,margin:1});
-    const card=document.createElement("article");card.className="certificate-card";card.dataset.certId=id;
-    card.innerHTML='<div class="cert-head"><div class="cert-brand">LOCALIA<small>CERTIFICADO DE PRUEBA</small></div><div class="cert-stamp">DEMO<br>NO OFICIAL</div></div><h3 class="cert-title">'+safe(type.title)+'</h3><p class="cert-notice">Muestra personalizada para probar el flujo. No es un permiso oficial ni acredita autorización legal.</p><div class="cert-fields"><div><small>Establecimiento</small><b>'+safe(data.business.businessName)+'</b></div><div><small>Actividad</small><b>'+safe(data.business.activity)+'</b></div><div><small>Responsable</small><b>'+safe(data.business.owner)+'</b></div><div><small>Ciudad</small><b>'+safe(data.business.city)+'</b></div><div><small>Dirección</small><b>'+safe(data.business.address)+'</b></div><div><small>Áreas declaradas</small><b>'+safe(data.areas.join(", "))+'</b></div><div><small>ID demo</small><b>'+id+'</b></div><div><small>Alcance</small><b>'+safe(type.scope)+'</b></div></div><div class="cert-proof"><img alt="QR de demostración" src="'+qr+'"><div><small>Huella SHA-256 de prueba</small><br><code>'+hash+'</code><span class="chain-label">No registrado en blockchain</span></div></div><div class="cert-actions"><button class="demo-btn primary" data-print="'+id+'">Imprimir / guardar PDF individual</button></div>';
-    target.appendChild(card);
-  }
-  document.querySelectorAll("[data-print]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll(".certificate-card").forEach(c=>c.removeAttribute("data-print-selected"));document.querySelector('[data-cert-id="'+button.dataset.print+'"]').setAttribute("data-print-selected","true");window.print();}));
+const initial={business:{businessName:"",businessType:"cafeteria",activity:"",city:"Riobamba",address:"",owner:"",area:"48",email:""},docs:{registration:"",ownerId:"",addressProof:"",notes:""},selectedAreas:["Cocina","Baño","Área de clientes","Entrada","Salida"],planCells:{},planNotes:"",stage:"draft",reviewNote:"",correction:"",reviewedAt:null};
+let state;
+try{state={...initial,...JSON.parse(localStorage.getItem(STORAGE)||"{}"),business:{...initial.business,...(JSON.parse(localStorage.getItem(STORAGE)||"{}").business||{})},docs:{...initial.docs,...(JSON.parse(localStorage.getItem(STORAGE)||"{}").docs||{})}};}catch{state=structuredClone(initial);}
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $=s=>document.querySelector(s);
+function save(){try{localStorage.setItem(STORAGE,JSON.stringify(state));}catch{setNotice("No se pudo guardar en este navegador. Exporta o imprime tus resultados de prueba.");}}
+function setNotice(msg){const n=$("#notice");if(n)n.textContent=msg;}
+function validBusiness(){const b=state.business;return !!(b.businessName.trim()&&b.activity.trim()&&b.city.trim()&&b.address.trim()&&b.owner.trim()&&Number(b.area)>=8);}
+function validDocs(){return !!(state.docs.registration.trim()&&state.docs.ownerId.trim()&&state.docs.addressProof.trim()&&state.planNotes.trim()&&state.selectedAreas.length>=2);}
+function canSubmit(){return validBusiness()&&validDocs();}
+function render(){
+root.innerHTML=`<div class="demo-wrap single-flow">
+<header class="demo-nav"><div class="demo-brand">LOCALIA<small>EXPEDIENTE DIGITAL · DEMO</small></div><span class="demo-chip">UNA SOLA PANTALLA</span></header>
+<section class="demo-hero"><span class="demo-tag">PRUEBA DE USUARIO + ENTIDAD SIMULADA</span><h1>Completa tu negocio,<br><em>revisa y envía.</em></h1><p>Ingresa los datos una sola vez. LOCALIA prepara los formatos y certificados de vista previa. Envíalos a la entidad demo y, cuando apruebe, verás los certificados aprobados en esta misma página.</p></section>
+<div class="demo-alert"><b>Solo demostración:</b> usa datos ficticios. Este prototipo guarda el expediente en este navegador y no tiene revisión oficial ni conexión con ME Network. No ingreses información personal real.</div>
+<div class="flow-status" id="flow-status"></div>
+<form id="applicant-form" class="single-form">
+<section class="demo-panel" id="business-panel"><div class="panel-heading"><span>01</span><div><h2>Datos del negocio</h2><p>Completa los datos del establecimiento y del solicitante.</p></div></div>
+<div class="demo-form">
+${field("businessName","Nombre comercial",state.business.businessName)}
+<label class="demo-field"><span>Tipo de negocio *</span><select name="businessType"><option value="cafeteria" ${state.business.businessType==="cafeteria"?"selected":""}>Cafetería / restaurante</option><option value="tienda" ${state.business.businessType==="tienda"?"selected":""}>Tienda comercial</option><option value="oficina" ${state.business.businessType==="oficina"?"selected":""}>Oficina / servicios</option><option value="otro" ${state.business.businessType==="otro"?"selected":""}>Otra actividad</option></select></label>
+${field("activity","Actividad específica",state.business.activity)}
+${field("city","Ciudad / cantón",state.business.city)}
+${field("address","Dirección del local",state.business.address)}
+${field("owner","Responsable del trámite",state.business.owner)}
+${field("area","Área aproximada (m²)",state.business.area,"number")}
+${field("email","Correo de contacto (opcional)",state.business.email,"email",false)}
+</div></section>
+<section class="demo-panel"><div class="panel-heading"><span>02</span><div><h2>Datos y formatos para los certificados</h2><p>Escribe la referencia de los documentos que entregarías a la entidad. En la prueba no necesitas documentos oficiales.</p></div></div>
+<div class="demo-form">
+${field("registration","Registro / permiso del negocio (referencia)",state.docs.registration)}
+${field("ownerId","Identificación del responsable (referencia ficticia)",state.docs.ownerId)}
+${field("addressProof","Comprobante de dirección (referencia)",state.docs.addressProof)}
+<label class="demo-field wide"><span>Observaciones o datos adicionales</span><textarea name="notes" rows="3">${esc(state.docs.notes)}</textarea></label>
+<label class="demo-field wide"><span>Adjuntar archivos de muestra (opcional)</span><input type="file" name="attachments" accept=".pdf,.jpg,.jpeg,.png" multiple><small id="attachment-names">Los archivos se usan solo para probar el selector; no se cargan a un servidor.</small></label>
+</div></section>
+<section class="demo-panel"><div class="panel-heading"><span>03</span><div><h2>Distribución del local y señalética</h2><p>Selecciona las áreas que existen. Toca las celdas del plano para colocar o mover cada área.</p></div></div>
+<div class="plan-editor"><label class="demo-field"><span>Área que vas a colocar</span><select id="area-tool">${areas.map(a=>'<option>'+esc(a)+'</option>').join("")}</select></label><div id="area-grid" class="area-grid"></div><div class="plan-legend"><span>🟦 Área seleccionada</span><span>🟩 Ruta de circulación sugerida</span><span>🟥 Señalética referencial</span></div></div>
+<label class="demo-field wide"><span>Describe entradas, flujo, adaptaciones o señalética requerida *</span><textarea name="planNotes" rows="3" required>${esc(state.planNotes)}</textarea></label><p class="plan-caution">Croquis ilustrativo de preparación. No es un plano técnico ni reemplaza la revisión profesional.</p></section>
+<section class="demo-panel"><div class="panel-heading"><span>04</span><div><h2>Certificados y formatos generados</h2><p>Se generan para revisar antes de enviar. En esta etapa llevan la marca BORRADOR / NO APROBADO.</p></div></div><div id="draft-certs" class="cert-grid"><p>Completa los campos obligatorios para generar la vista previa personalizada.</p></div></section>
+<section class="demo-panel submission-panel"><div class="panel-heading"><span>05</span><div><h2>Enviar expediente</h2><p>La entidad demo revisará los datos y podrá pedir correcciones o aprobar.</p></div></div><div id="submission-message" class="demo-feedback"></div><button class="demo-btn primary full" id="send-case" type="button">Enviar expediente a entidad demo</button><button class="demo-btn full" id="resend-case" type="button" hidden>Corregir y reenviar expediente</button><p id="notice" class="demo-feedback" aria-live="polite"></p></section>
+<section class="demo-panel"><div class="panel-heading"><span>06</span><div><h2>Entidad revisora de prueba</h2><p>Simulación de una entidad. No representa a un organismo oficial.</p></div></div><div class="reviewer-note" id="reviewer-note">El expediente aparecerá aquí después de enviarlo.</div><div class="demo-actions" id="reviewer-actions"></div></section>
+<section class="demo-panel"><div class="panel-heading"><span>07</span><div><h2>Certificados aprobados</h2><p>Se mostrarán aquí únicamente después de la aprobación simulada.</p></div></div><div id="approved-certs" class="cert-grid"><p class="cert-placeholder">Aún no hay certificados aprobados.</p></div></section>
+</form>
+<footer class="demo-footer">LOCALIA · Hackathon prototype · Certificados ficticios · Sin blockchain</footer></div>`;
+bind();drawGrid();updatePreview();renderStatus();renderReviewer();if(state.stage==="approved")renderApproved().catch(e=>setNotice("Error al preparar certificados: "+e.message));
 }
-function showCertError(error) { document.querySelector("#certificates").innerHTML="<p>No se pudieron generar los QR. Recarga la página e inténtalo de nuevo.</p>"; console.error(error); }
+function field(name,label,value,type="text",required=true){return '<label class="demo-field"><span>'+label+(required?' *':'')+'</span><input name="'+name+'" type="'+type+'" value="'+esc(value)+'" '+(required?'required':'')+'></label>';}
+function bind(){
+$("#applicant-form").addEventListener("input",e=>{if(e.target.name){if(["businessName","businessType","activity","city","address","owner","area","email"].includes(e.target.name))state.business[e.target.name]=e.target.value;else if(["registration","ownerId","addressProof","notes"].includes(e.target.name))state.docs[e.target.name]=e.target.value;else if(e.target.name==="planNotes")state.planNotes=e.target.value;save();updatePreview();renderStatus();}});
+$("#applicant-form").addEventListener("change",e=>{if(e.target.name==="attachments"){const names=Array.from(e.target.files||[]).map(f=>f.name);$("#attachment-names").textContent=names.length?names.join(" · "):"No se seleccionaron archivos.";setNotice("Archivos seleccionados localmente; no se han subido.");}});
+$("#send-case").addEventListener("click",()=>{readForm();if(!canSubmit()){setNotice("Completa los datos obligatorios, las 3 referencias documentales, selecciona al menos 2 áreas y describe la distribución.");document.querySelector("#business-panel").scrollIntoView({behavior:"smooth"});return;}if(state.stage==="corrections"){state.stage="resubmitted";}else state.stage="submitted";state.reviewNote="";save();renderStatus();renderReviewer();setNotice("Expediente enviado a la entidad demo.");$("#reviewer-note").scrollIntoView({behavior:"smooth",block:"center"});});
+$("#resend-case").addEventListener("click",()=>{$("#send-case").click();});
+$("#area-tool").addEventListener("change",drawGrid);
+}
+function readForm(){const f=new FormData($("#applicant-form"));for(const k of ["businessName","businessType","activity","city","address","owner","area","email"])state.business[k]=f.get(k)||"";for(const k of ["registration","ownerId","addressProof","notes"])state.docs[k]=f.get(k)||"";state.planNotes=f.get("planNotes")||"";}
+function drawGrid(){const grid=$("#area-grid");if(!grid)return;grid.innerHTML="";for(let i=0;i<60;i++){const a=state.planCells[i];const btn=document.createElement("button");btn.type="button";btn.className="area-cell"+(a?" occupied":"")+(a===($("#area-tool").value)?" chosen":"");btn.textContent=a?areaShort(a):"";btn.title=a||"Celda libre";btn.addEventListener("click",()=>{const tool=$("#area-tool").value;for(const key of Object.keys(state.planCells))if(state.planCells[key]===tool)delete state.planCells[key];state.planCells[i]=tool;state.selectedAreas=Array.from(new Set(Object.values(state.planCells).concat(state.selectedAreas.filter(x=>!Object.values(state.planCells).includes(x)))));save();drawGrid();updatePreview();});grid.appendChild(btn);}}
+function areaShort(a){return ({ "Cocina":"COC","Baño":"BAÑ","Bodega":"BOD","Caja / atención":"CAJ","Área de clientes":"CLI","Entrada":"ENT","Salida":"SAL","Extintor":"EXT","Primeros auxilios":"PA","Accesibilidad":"ACC"})[a]||a.slice(0,3).toUpperCase();}
+function renderStatus(){const labels=["Borrador","Enviada","Correcciones","Reenviada","Aprobada"];const idx=({draft:0,submitted:1,corrections:2,resubmitted:3,approved:4})[state.stage]||0;$("#flow-status").innerHTML=labels.map((x,i)=>'<span class="flow-pill '+(i<=idx?"active":"")+'">'+(i+1)+" · "+x+"</span>").join("");$("#send-case").disabled=!canSubmit()||["submitted","resubmitted","approved"].includes(state.stage);$("#resend-case").hidden=state.stage!=="corrections";$("#submission-message").textContent=state.stage==="submitted"?"En revisión por entidad demo.":state.stage==="resubmitted"?"Expediente reenviado, pendiente de decisión.":state.stage==="corrections"?"Hay correcciones pendientes; modifica los campos y reenvía.":state.stage==="approved"?"Aprobado por entidad demo. Los certificados finales están disponibles abajo.":canSubmit()?"Expediente listo. Revisa los borradores y envíalo.":"Completa los campos obligatorios para habilitar el envío.";}
+function updatePreview(){const target=$("#draft-certs");if(!target)return;if(!validBusiness()){target.innerHTML='<p class="cert-placeholder">Completa nombre, actividad, ciudad, dirección, responsable y área para ver los formatos personalizados.</p>';return;}target.innerHTML=certTypes.map(t=>'<article class="certificate-card draft"><div class="cert-head"><div class="cert-brand">LOCALIA<small>DOCUMENTO DE DEMOSTRACIÓN</small></div><div class="cert-stamp">BORRADOR<br>NO APROBADO</div></div><h3 class="cert-title">'+esc(t.title)+'</h3><p class="cert-notice">Vista previa generada con los datos ingresados. No es válido como permiso ni certificado oficial.</p><div class="cert-fields">'+certFields(t)+'</div><div class="draft-mark">VISTA PREVIA · AÚN NO ENVIADO</div></article>').join("");}
+function certFields(t){const b=state.business,d=state.docs;return '<div><small>Negocio</small><b>'+esc(b.businessName)+'</b></div><div><small>Actividad</small><b>'+esc(b.activity)+'</b></div><div><small>Responsable</small><b>'+esc(b.owner)+'</b></div><div><small>Ciudad / dirección</small><b>'+esc(b.city)+' · '+esc(b.address)+'</b></div><div><small>Área</small><b>'+esc(b.area)+' m²</b></div><div><small>Datos / referencia</small><b>'+esc(t.key==="municipal"?d.registration:t.key==="safety"?Object.values(state.planCells).join(", "):d.ownerId+" · "+d.addressProof)+'</b></div><div><small>Alcance</small><b>'+esc(t.scope)+'</b></div>';}
+function renderReviewer(){const n=$("#reviewer-note"),actions=$("#reviewer-actions");if(!n||!actions)return;if(!["submitted","resubmitted","corrections"].includes(state.stage)){n.textContent=state.stage==="approved"?"Entidad demo: expediente aprobado.": "El expediente aparecerá aquí después de enviarlo.";actions.innerHTML="";return;}n.innerHTML='<div class="review-record"><b>Expediente de revisión demo</b><p>Negocio: '+esc(state.business.businessName)+' · Responsable: '+esc(state.business.owner)+'</p><p>Formatos recibidos: '+certTypes.length+' · Áreas: '+esc(Object.values(state.planCells).join(", ")||state.selectedAreas.join(", "))+'</p><p>Documentación: '+esc(state.docs.registration)+', '+esc(state.docs.ownerId)+', '+esc(state.docs.addressProof)+'</p></div>'+(state.stage==="corrections"?'<div class="correction-note"><b>Observación:</b> '+esc(state.correction)+'</div>':"");actions.innerHTML='<button class="demo-btn" id="demo-correction">Solicitar corrección</button><button class="demo-btn primary" id="demo-approve">Aprobar expediente demo</button>';$("#demo-correction").addEventListener("click",()=>{state.stage="corrections";state.correction="Revisa la información y referencias documentales. Si están correctas, corrige o confirma los campos y reenvía.";save();renderStatus();renderReviewer();setNotice("La entidad demo emitió una observación.");});$("#demo-approve").addEventListener("click",()=>{state.stage="approved";state.reviewedAt=new Date().toISOString();save();renderStatus();renderReviewer();renderApproved().catch(e=>setNotice("No se pudieron crear los certificados aprobados: "+e.message));$("#approved-certs").scrollIntoView({behavior:"smooth",block:"start"});});}
+async function renderApproved(){const target=$("#approved-certs");target.innerHTML="";for(const t of certTypes){const record={id:"LOCALIA-APPROVED-DEMO-"+t.key.toUpperCase(),business:state.business,docs:state.docs,areas:state.planCells,reviewedAt:state.reviewedAt,status:"APPROVED DEMO"};const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(JSON.stringify(record)))),b=>b.toString(16).padStart(2,"0")).join("");const qr=await QRCode.toDataURL("LOCALIA APPROVED DEMO | "+record.id+" | SHA256:"+hash+" | NOT ON ME NETWORK",{width:150,margin:1});const card=document.createElement("article");card.className="certificate-card approved";card.dataset.certId=record.id;card.innerHTML='<div class="cert-head"><div class="cert-brand">LOCALIA<small>CERTIFICADO APROBADO · DEMO</small></div><div class="cert-stamp approved-stamp">APROBADO<br>ENTIDAD DEMO</div></div><h3 class="cert-title">'+esc(t.title.replace("Formato demo · ","Constancia aprobada demo · "))+'</h3><p class="cert-notice">Aprobación simulada por entidad de prueba. No es autorización oficial ni está registrada en ME Network.</p><div class="cert-fields">'+certFields(t)+'</div><div class="cert-proof"><img alt="QR del certificado demo" src="'+qr+'"><div><small>Huella SHA-256</small><code>'+hash+'</code><span class="chain-label">No registrado en blockchain</span></div></div><div class="cert-actions"><button class="demo-btn primary" data-print="'+record.id+'">Imprimir / guardar PDF</button></div>';target.appendChild(card);}target.querySelectorAll("[data-print]").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".certificate-card").forEach(c=>c.removeAttribute("data-print-selected"));document.querySelector('[data-cert-id="'+btn.dataset.print+'"]').setAttribute("data-print-selected","true");window.print();}));}
 window.addEventListener("afterprint",()=>document.querySelectorAll(".certificate-card").forEach(c=>c.removeAttribute("data-print-selected")));
 render();
