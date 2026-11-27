@@ -348,29 +348,33 @@ function renderReviewer() {
   }
 }
 async function issueDemoCertificate() {
-  if (caseData.status !== "approved") return;
-  const certificateId = "LOC-DEMO-" + randomHex(8).toUpperCase();
-  const approvedSummary = { certificateId, businessName: caseData.form.businessName, activity: caseData.form.activity, city: caseData.form.city, issuer: DEMO_ISSUER, approvedAt: caseData.approvedAt, status: "DEMO - NOT OFFICIAL" };
-  const bytes = new TextEncoder().encode(JSON.stringify(approvedSummary));
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  const hash = Array.from(new Uint8Array(digest), b=>b.toString(16).padStart(2,"0")).join("");
-  caseData.certificate = { ...approvedSummary, documentHash: hash };
-  caseData.status = "issued";
+  if(caseData.status!=="approved")return;
+  const certificates=[];
+  for(const type of DEMO_CERTIFICATE_TYPES){
+    const certificateId="LOC-DEMO-"+type.key.toUpperCase()+"-"+randomHex(6).toUpperCase();
+    const summary={certificateId,certificateType:type.title,scope:type.scope,businessName:caseData.form.businessName,activity:caseData.form.activity,city:caseData.form.city,issuer:DEMO_ISSUER,approvedAt:caseData.approvedAt,status:"DEMO - NOT OFFICIAL"};
+    const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(JSON.stringify(summary)));
+    const hash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
+    certificates.push({...summary,documentHash:hash});
+  }
+  caseData.certificates=certificates;caseData.certificate=certificates[0];caseData.status="issued";
   await saveEncryptedCase();
 }
 async function renderCertificate() {
-  const panel = $("#certificate-panel");
-  if (!caseData.certificate) { panel.classList.add("hidden"); return; }
+  const panel=$("#certificate-panel");
+  const list=caseData.certificates|| (caseData.certificate?[caseData.certificate]:[]);
+  if(!list.length){panel.classList.add("hidden");return;}
   panel.classList.remove("hidden");
-  const c = caseData.certificate;
-  const qrPayload = `LOCALIA-DEMO-CERT|ID:${c.certificateId}|HASH:${c.documentHash}|STATUS:NOT-OFFICIAL`;
-  let qr = "";
-  try { qr = await QRCode.toDataURL(qrPayload, { width: 180, margin: 1, errorCorrectionLevel: "M" }); } catch {}
-  $("#certificate-output").innerHTML = `<div class="demo-certificate" id="print-certificate"><div class="cert-top">LOCALIA <span>CERTIFICADO DE DEMOSTRACIÓN</span></div><div class="cert-stamp">DEMO<br>NO OFICIAL</div><h3>Constancia de flujo de aprobación</h3><p>Este documento demuestra el flujo de revisión y aprobación de LOCALIA. <b>No es permiso de funcionamiento ni documento emitido por una autoridad pública.</b></p><div class="cert-data"><div><small>Establecimiento</small><b>${escapeHtml(c.businessName)}</b></div><div><small>Actividad</small><b>${escapeHtml(c.activity)}</b></div><div><small>Ciudad</small><b>${escapeHtml(c.city)}</b></div><div><small>Entidad de prueba</small><b>${escapeHtml(c.issuer)}</b></div><div><small>Identificador</small><b>${escapeHtml(c.certificateId)}</b></div><div><small>Fecha de aprobación</small><b>${new Date(c.approvedAt).toLocaleString("es-EC")}</b></div></div><div class="cert-bottom">${qr ? `<img src="${qr}" alt="QR de certificado demo">` : ""}<div><small>Huella SHA-256 del resumen</small><code>${c.documentHash}</code><small>El hash no prueba que una entidad real haya emitido el documento. Registro en blockchain: pendiente hasta integración oficial.</small></div></div></div><button class="primary-btn" id="print-cert">Imprimir / guardar PDF</button><button class="secondary-btn" id="download-cert">Descargar constancia JSON</button>`;
+  let html="";
+  for(const c of list){
+    const qrPayload="LOCALIA-DEMO-CERT|ID:"+c.certificateId+"|HASH:"+c.documentHash+"|STATUS:NOT-OFFICIAL";
+    let qr="";try{qr=await QRCode.toDataURL(qrPayload,{width:180,margin:1,errorCorrectionLevel:"M"});}catch{}
+    html+='<div class="demo-certificate"><div class="cert-top">LOCALIA <span>CONSTANCIA DE DEMOSTRACIÓN</span></div><div class="cert-stamp">DEMO<br>NO OFICIAL</div><h3>'+escapeHtml(c.certificateType||"Constancia de flujo de aprobación")+'</h3><p>Este documento demuestra que la entidad de prueba revisó el expediente. <b>No es permiso de funcionamiento ni certificado emitido por autoridad pública.</b></p><div class="cert-data"><div><small>Establecimiento</small><b>'+escapeHtml(c.businessName)+'</b></div><div><small>Actividad</small><b>'+escapeHtml(c.activity)+'</b></div><div><small>Ciudad</small><b>'+escapeHtml(c.city)+'</b></div><div><small>Entidad demo</small><b>'+escapeHtml(c.issuer)+'</b></div><div><small>ID</small><b>'+escapeHtml(c.certificateId)+'</b></div><div><small>Fecha de aprobación</small><b>'+new Date(c.approvedAt).toLocaleString("es-EC")+'</b></div></div><div class="cert-bottom">'+(qr?'<img src="'+qr+'" alt="QR de certificado demo">':"")+'<div><small>Huella SHA-256</small><code>'+c.documentHash+'</code><small>Blockchain real: pendiente de integración oficial.</small></div></div></div>';
+  }
+  $("#certificate-output").innerHTML=html+'<button class="primary-btn" id="print-cert">Imprimir / guardar todos los certificados PDF</button><button class="secondary-btn" id="download-cert">Descargar paquete JSON</button>';
   $("#print-cert").addEventListener("click",()=>window.print());
   $("#download-cert").addEventListener("click",()=>{
-    const blob=new Blob([JSON.stringify(c,null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`${c.certificateId}.json`; a.click(); URL.revokeObjectURL(url);
+    const blob=new Blob([JSON.stringify(list,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="LOCALIA-certificados-demo.json";a.click();URL.revokeObjectURL(url);
   });
 }
 function renderAll() {
