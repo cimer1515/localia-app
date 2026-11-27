@@ -17,7 +17,8 @@ LOCALIA ayuda a emprendedores a preparar la apertura de su negocio mediante una 
 ## Stack compatible con Meta Earth
 - Frontend: JavaScript con Vite
 - Smart contract: Solidity para la EVM de ME Network
-- Integración: ethers.js y Meta Earth JS SDK oficial (`meta-earth-js-sdk`)
+- Integración EVM actual: ethers.js para wallet y llamadas al contrato Solidity
+- Meta Earth JS SDK oficial se mantiene como integración opcional futura; no es dependencia de la primera compilación web
 - Herramienta de compilación del contrato: solc-js
 
 Meta Earth anunció compatibilidad EVM para ME Network mainnet en septiembre de 2026. El SDK oficial documenta operaciones EVM y exige configurar explícitamente RPC y chain ID para mainnet.
