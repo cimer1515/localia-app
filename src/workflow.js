@@ -25,6 +25,7 @@ const DEMO_CERTIFICATE_TYPES = [
 let caseData = null;
 let cryptoKey = null;
 let saltBytes = null;
+let quickStartData = null;
 
 const $ = (sel) => document.querySelector(sel);
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (c) => ({
@@ -87,6 +88,14 @@ function requirementList(form) {
 }
 function getStageLabel(status) {
   return ({ draft: "Borrador", submitted: "En revisión", corrections: "Correcciones solicitadas", approved: "Aprobado por entidad demo", issued: "Certificado demo emitido" })[status] || "Borrador";
+}
+async function applyQuickStart() {
+  if(!quickStartData||!caseData||!cryptoKey)return;
+  const data=quickStartData;quickStartData=null;
+  caseData.form={...(caseData.form||{}),...data};
+  caseData.requirements=requirementList(caseData.form);
+  caseData.plan={width:Number(data.width)||8,depth:Number(data.depth)||6,cells:caseData.plan?.cells||{}};
+  await saveEncryptedCase();renderAll();
 }
 function renderShell() {
   const section = document.createElement("section");
