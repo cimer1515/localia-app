@@ -2,7 +2,10 @@ import "dotenv/config";
 import fs from "node:fs";
 import { JsonRpcProvider, Wallet, ContractFactory } from "ethers";
 
-const networkMode = process.env.ME_EVM_NETWORK;\nif (!["testnet","mainnet"].includes(networkMode)) throw new Error("Set ME_EVM_NETWORK to testnet or mainnet explicitly.");\nif (networkMode === "mainnet" && process.env.ME_CONFIRM_MAINNET_DEPLOY !== "YES") throw new Error("Mainnet deployment blocked. Set ME_CONFIRM_MAINNET_DEPLOY=YES only after verifying the official ME mainnet RPC, EVM chain ID, deployer wallet and gas.");\nconst rpcUrl = process.env.ME_EVM_RPC_URL;
+const networkMode = process.env.ME_EVM_NETWORK;
+if (!["testnet","mainnet"].includes(networkMode)) throw new Error("Set ME_EVM_NETWORK to testnet or mainnet explicitly.");
+if (networkMode === "mainnet" && process.env.ME_CONFIRM_MAINNET_DEPLOY !== "YES") throw new Error("Mainnet deployment blocked. Set ME_CONFIRM_MAINNET_DEPLOY=YES only after verifying the official ME mainnet RPC, EVM chain ID, deployer wallet and gas.");
+const rpcUrl = process.env.ME_EVM_RPC_URL;
 const privateKey = process.env.ME_DEPLOYER_PRIVATE_KEY;
 const chainIdSetting = process.env.ME_EVM_CHAIN_ID;
 if (!chainIdSetting) throw new Error("Set ME_EVM_CHAIN_ID after confirming the official current ME Network chain ID.");
