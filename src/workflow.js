@@ -126,7 +126,7 @@ function renderShell() {
       <article class="workflow-panel requirements-panel">
         <div class="panel-title"><span>04</span><div><b>Requisitos y documentos</b><small>Checklist orientativo; no confirma requisitos oficiales</small></div></div>
         <div class="requirements-output" id="requirements-output"></div>
-        <div class="document-add"><label>Nombre del documento que tienes<input id="document-name" maxlength="120" placeholder="Ej. Croquis del local / certificado..."></label><button class="secondary-btn" id="add-document" type="button">Añadir al expediente</button></div>
+        <div class="document-add"><label>Nombre del documento<input id="document-name" maxlength="120" placeholder="Ej. Croquis del local / documento..."></label><label>Archivo PDF o imagen (máx. 1 MB)<input id="document-file" type="file" accept=".pdf,image/png,image/jpeg,image/webp"></label><button class="secondary-btn" id="add-document" type="button">Cifrar y añadir</button></div>
         <p class="form-feedback" id="document-feedback" aria-live="polite"></p>
       </article>
       <article class="workflow-panel submission-panel">
@@ -162,18 +162,20 @@ function renderRequirements() {
   const form = caseData.form || {};
   const reqs = caseData.requirements?.length ? caseData.requirements : requirementList(form);
   $("#requirements-output").innerHTML = `<ul class="workflow-checklist">${reqs.map((r,i)=>`<li><span>${String(i+1).padStart(2,"0")}</span>${escapeHtml(r)}</li>`).join("")}</ul>
-    <div class="docs-list"><b>Documentos añadidos</b>${(caseData.documents||[]).length ? caseData.documents.map(d=>`<span>📄 ${escapeHtml(d.name)}</span>`).join("") : "<p>Aún no has añadido documentos.</p>"}</div>`;
+    <div class="docs-list"><b>Documentos añadidos</b>${(caseData.documents||[]).length ? caseData.documents.map(d=>`<span>📄 ${escapeHtml(d.name)} · ${d.fileName ? "archivo cifrado adjunto" : "solo referencia, sin archivo"}</span>`).join("") : "<p>Aún no has añadido documentos.</p>"}</div>`;
 }
 function renderSubmission() {
   const missing = requiredMissing(caseData.form || {});
   const corrections = caseData.corrections || [];
   let html = "";
-  if (caseData.status === "corrections") html = `<div class="correction-note"><b>La entidad pidió correcciones.</b><p>${corrections.map(escapeHtml).join("<br>")}</p><p>Corrige los datos, guarda el expediente y vuelve a enviarlo.</p></div>`;
+  if (caseData.status === "corrections") html = `<div class="correction-note"><b>La entidad pidió correcciones.</b><p>${corrections.map(escapeHtml).join("<br>")}</p><p>Corrige los datos, guarda el expediente y vuelve a enviarlo.</p><button class="secondary-btn" id="print-user-correction">Imprimir documento de corrección</button></div>`;
   else if (caseData.status === "approved" || caseData.status === "issued") html = `<div class="approved-note"><b>Expediente aprobado por la entidad demo.</b><p>La emisión final queda habilitada.</p></div>`;
   else if (missing.length) html = `<div class="missing-note"><b>Antes de enviar, completa:</b><p>${missing.map(escapeHtml).join(" · ")}</p></div>`;
   else html = `<div class="ready-note"><b>Expediente listo para revisión.</b><p>La entidad revisará la información y podrá aprobar o solicitar correcciones.</p></div>`;
   $("#submission-status").innerHTML = html;
   $("#submit-case").disabled = missing.length>0 || caseData.status==="approved" || caseData.status==="issued";
+  const correctionPrint = $("#print-user-correction");
+  if (correctionPrint) correctionPrint.addEventListener("click",()=>window.print());
   $("#submit-case").textContent = caseData.status==="corrections" ? "Reenviar expediente corregido" : "Enviar expediente a entidad demo";
 }
 function renderReviewer() {
@@ -185,7 +187,7 @@ function renderReviewer() {
     }
     const missing = requiredMissing(caseData.form || {});
     const notes = caseData.form?.notes || "";
-    area.innerHTML = `<div class="review-record"><div><span class="review-label">Expediente</span><b>${escapeHtml(caseData.id)}</b></div><div><span class="review-label">Negocio</span><b>${escapeHtml(caseData.form.businessName)}</b></div><div><span class="review-label">Responsable</span><b>${escapeHtml(caseData.form.ownerName)}</b></div><div><span class="review-label">Ubicación</span><b>${escapeHtml(caseData.form.address)}, ${escapeHtml(caseData.form.city)}</b></div><div><span class="review-label">Actividad</span><b>${escapeHtml(caseData.form.activity)}</b></div><div><span class="review-label">Área</span><b>${escapeHtml(caseData.form.area)} m²</b></div><div><span class="review-label">Documentos declarados</span><b>${(caseData.documents||[]).map(d=>escapeHtml(d.name)).join(", ")||"No adjuntados"}</b></div><div><span class="review-label">Notas del usuario</span><b>${escapeHtml(notes)||"Sin notas"}</b></div></div>
+    area.innerHTML = `<div class="review-record"><div><span class="review-label">Expediente</span><b>${escapeHtml(caseData.id)}</b></div><div><span class="review-label">Negocio</span><b>${escapeHtml(caseData.form.businessName)}</b></div><div><span class="review-label">Responsable</span><b>${escapeHtml(caseData.form.ownerName)}</b></div><div><span class="review-label">Ubicación</span><b>${escapeHtml(caseData.form.address)}, ${escapeHtml(caseData.form.city)}</b></div><div><span class="review-label">Actividad</span><b>${escapeHtml(caseData.form.activity)}</b></div><div><span class="review-label">Área</span><b>${escapeHtml(caseData.form.area)} m²</b></div><div><span class="review-label">Documentos declarados</span><b>${(caseData.documents||[]).map(d=>escapeHtml(d.name)+(d.fileName?" (archivo adjunto)":" (sin archivo)")).join(", ")||"No adjuntados"}</b></div><div><span class="review-label">Notas del usuario</span><b>${escapeHtml(notes)||"Sin notas"}</b></div></div>
       <label>Observaciones / correcciones<textarea id="review-notes" rows="3" placeholder="Indica exactamente qué falta o qué debe corregirse"></textarea></label>
       ${missing.length ? `<div class="missing-note">Campos faltantes detectados automáticamente: ${missing.map(escapeHtml).join(", ")}</div>` : ""}
       <div class="review-actions"><button class="secondary-btn" id="request-corrections">Emitir documento de corrección</button><button class="primary-btn" id="approve-case">Aprobar expediente demo</button></div>
@@ -279,9 +281,13 @@ export function mountWorkflow() {
   });
   $("#add-document").addEventListener("click",async()=>{
     const name=$("#document-name").value.trim(); if(!name){$("#document-feedback").textContent="Escribe el nombre del documento.";return;}
-    caseData.documents.push({name,addedAt:new Date().toISOString(),status:"declarado"});
-    $("#document-name").value=""; await saveEncryptedCase(); renderRequirements();
-    $("#document-feedback").textContent="Añadido al checklist. En esta versión se registra el nombre; la carga segura de archivos se añadirá con el backend.";
+    const file=$("#document-file").files?.[0];
+    if(file && file.size>1024*1024){$("#document-feedback").textContent="El archivo supera 1 MB. Usa un archivo más pequeño para esta demo.";return;}
+    let fileData=null;
+    if(file){const bytes=new Uint8Array(await file.arrayBuffer());fileData=toBase64(bytes);}
+    caseData.documents.push({name,fileName:file?.name||"",mimeType:file?.type||"",encryptedPayload:fileData,addedAt:new Date().toISOString(),status:"declarado"});
+    $("#document-name").value=""; $("#document-file").value=""; await saveEncryptedCase(); renderRequirements();
+    $("#document-feedback").textContent="Añadido. El contenido del archivo queda dentro del expediente cifrado en este navegador. Límite demo: 1 MB por archivo.";
   });
   $("#submit-case").addEventListener("click",async()=>{
     const missing=requiredMissing(caseData.form);
