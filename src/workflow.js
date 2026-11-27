@@ -130,7 +130,7 @@ function renderShell() {
       <article class="workflow-panel requirements-panel">
         <div class="panel-title"><span>04</span><div><b>Requisitos y documentos</b><small>Checklist orientativo; no confirma requisitos oficiales</small></div></div>
         <div class="requirements-output" id="requirements-output"></div>
-        <div class="document-add"><label>Tipo de documento<select id="document-type"><option>Croquis / plano</option><option>Documento del responsable</option><option>Respaldo de ubicación del local</option><option>Documento sanitario</option><option>Otro documento</option></select></label><label>Nombre del documento<input id="document-name" maxlength="120" placeholder="Nombre o referencia del documento"></label><label>Archivo PDF o imagen (máx. 400 KB)<input id="document-file" type="file" accept=".pdf,image/png,image/jpeg,image/webp"></label><button class="secondary-btn" id="add-document" type="button">Cifrar y añadir</button></div>
+        <div class="document-add"><label>Tipo de documento<select id="document-type"><option>Croquis / plano</option><option>Documento del responsable</option><option>Respaldo de ubicación del local</option><option>Documento sanitario</option><option>Otro documento</option></select></label><label>Nombre del documento<input id="document-name" maxlength="120" placeholder="Nombre o referencia del documento"></label><label>Archivo PDF o imagen (máx. 250 KB)<input id="document-file" type="file" accept=".pdf,image/png,image/jpeg,image/webp"></label><button class="secondary-btn" id="add-document" type="button">Cifrar y añadir</button></div>
         <p class="form-feedback" id="document-feedback" aria-live="polite"></p>
       </article>
       <article class="workflow-panel submission-panel">
@@ -313,9 +313,9 @@ export function mountWorkflow() {
   $("#add-document").addEventListener("click",async()=>{
     const name=$("#document-name").value.trim(); if(!name){$("#document-feedback").textContent="Escribe el nombre del documento.";return;}
     const file=$("#document-file").files?.[0];
-    if(file && file.size>400*1024){$("#document-feedback").textContent="El archivo supera 400 KB. Reduce el tamaño para mantener el expediente cifrado dentro del almacenamiento local.";return;}
+    if(file && file.size>250*1024){$("#document-feedback").textContent="El archivo supera 400 KB. Reduce el tamaño para mantener el expediente cifrado dentro del almacenamiento local.";return;}
     if(file && !(file.type==="application/pdf" || file.type.startsWith("image/"))){$("#document-feedback").textContent="Adjunta un PDF o una imagen.";return;}
-    if(caseData.documents.length>=5){$("#document-feedback").textContent="La demo admite hasta 5 archivos por expediente.";return;}
+    if(caseData.documents.length>=3){$("#document-feedback").textContent="La demo admite hasta 3 archivos por expediente.";return;}
     let fileData=null;
     if(file){const bytes=new Uint8Array(await file.arrayBuffer());fileData=toBase64(bytes);}
     caseData.documents.push({type:$("#document-type").value,name,fileName:file?.name||"",mimeType:file?.type||"",encryptedPayload:fileData,addedAt:new Date().toISOString(),status:"declarado"});
