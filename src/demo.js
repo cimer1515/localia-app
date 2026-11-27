@@ -73,7 +73,7 @@ function drawGrid(){
   btn.className="area-cell"+(a?" occupied":"");btn.textContent=a?areaShort(a):"";btn.title=(a||"Celda libre")+" · celda "+(i+1);
   grid.appendChild(btn);
  }
- grid.onpointerdown=e=>{const cell=e.target.closest("[data-cell]");if(!cell)return;e.preventDefault();dragStart=Number(cell.dataset.cell);dragCurrent=dragStart;dragging=true;paintRange();};
+ grid.onpointerdown=e=>{const cell=e.target.closest("[data-cell]");if(!cell)return;e.preventDefault();if(grid.setPointerCapture)grid.setPointerCapture(e.pointerId);dragStart=Number(cell.dataset.cell);dragCurrent=dragStart;dragging=true;paintRange();};
  grid.onpointermove=e=>{if(!dragging)return;const el=document.elementFromPoint(e.clientX,e.clientY),cell=el&&el.closest("[data-cell]");if(cell){dragCurrent=Number(cell.dataset.cell);paintRange();}};
  const finish=e=>{if(!dragging)return;const el=document.elementFromPoint(e.clientX,e.clientY),cell=el&&el.closest("[data-cell]");if(cell)dragCurrent=Number(cell.dataset.cell);applyRange();dragging=false;dragStart=null;dragCurrent=null;drawGrid();updatePlanImage();updatePreview();renderStatus();};
  grid.onpointerup=finish;grid.onpointercancel=()=>{dragging=false;dragStart=null;dragCurrent=null;paintRange();};
@@ -101,7 +101,7 @@ function planSvg(){
  function center(a){const arr=points[a]||[];if(!arr.length)return null;return {x:ox+(arr.reduce((n,i)=>n+i%10+.5,0)/arr.length)*cw,y:oy+(arr.reduce((n,i)=>n+Math.floor(i/10)+.5,0)/arr.length)*ch};}
  const exit=center("Salida")||center("Entrada")||{x:ox+gridW-cw/2,y:oy+gridH/2};
  // Green evacuation arrows from occupied zones toward the selected exit.
- Object.keys(points).filter(a=>!["Salida","Entrada","Extintor","Primeros auxilios"].includes(a)).forEach(a=>{const p=center(a);if(!p)return;const dx=exit.x-p.x,dy=exit.y-p.y,dist=Math.max(1,Math.hypot(dx,dy)),x=p.x+dx/dist*18,y=p.y+dy/dist*18,tx=exit.x-dx/dist*25,ty=exit.y-dy/dist*25;s+='<path d="M '+x+' '+y+' L '+tx+' '+ty+' " stroke="#1d9b6c" stroke-width="5" stroke-dasharray="10 8" fill="none" marker-end="url(#arrow)"/>';});
+ Object.keys(points).filter(a=>!["Salida","Entrada","Extintor","Primeros auxilios"].includes(a)).forEach(a=>{const p=center(a);if(!p)return;const dx=exit.x-p.x,dy=exit.y-p.y,dist=Math.max(1,Math.hypot(dx,dy)),x=p.x+dx/dist*18,y=p.y+dy/dist*18,tx=exit.x-dx/dist*25,ty=exit.y-dy/dist*25;s+='<path d="M '+x+' '+y+' L '+tx+' '+ty+'" stroke="#1d9b6c" stroke-width="5" stroke-dasharray="10 8" fill="none" marker-end="url(#arrow)"/>';});
  s=s.replace('<rect width="100%"','<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#1d9b6c"/></marker></defs><rect width="100%"');
  function badge(p,label,bg,fg){if(!p)return "";return '<g><circle cx="'+p.x+'" cy="'+p.y+'" r="22" fill="'+bg+'" stroke="#fff" stroke-width="3"/><text x="'+p.x+'" y="'+(p.y+5)+'" text-anchor="middle" font-family="Arial" font-size="12" font-weight="900" fill="'+fg+'">'+label+'</text></g>';}
  s+=badge(center("Salida")||center("Entrada"),"SAL","#1d9b6c","#fff");
