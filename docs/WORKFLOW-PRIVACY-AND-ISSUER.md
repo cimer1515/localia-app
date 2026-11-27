@@ -30,7 +30,7 @@ Este panel no tiene autenticación segura ni autoridad legal. El PIN está inclu
 La app cifra el JSON del expediente con AES-GCM. La clave se deriva mediante PBKDF2 (SHA-256, 250 000 iteraciones) de la contraseña introducida por el usuario. El registro cifrado se guarda en localStorage. Los adjuntos se codifican dentro del expediente y, por tanto, quedan cifrados junto con él.
 
 Limitaciones:
-- localStorage tiene capacidad limitada; esta demo limita cada archivo a 1 MB.
+- localStorage tiene capacidad limitada; esta demo permite hasta 8 archivos de máximo 180 KB cada uno.
 - una vulnerabilidad XSS en el sitio podría acceder a datos cuando el usuario desbloquea la bóveda; se requiere CSP y revisión de seguridad.
 - la entidad no puede acceder desde otro dispositivo porque no existe backend.
 - el usuario debe conservar la contraseña; no hay recuperación.
