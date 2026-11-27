@@ -179,7 +179,8 @@ function renderSubmission() {
   const corrections = caseData.corrections || [];
   let html = "";
   if (caseData.status === "corrections") html = `<div class="correction-note"><b>La entidad pidió correcciones.</b><p>${corrections.map(escapeHtml).join("<br>")}</p><p>Corrige los datos, guarda el expediente y vuelve a enviarlo.</p><button class="secondary-btn" id="print-user-correction">Imprimir documento de corrección</button></div>`;
-  else if (caseData.status === "submitted") html = `<div class="ready-note"><b>Expediente enviado a revisión.</b><p>Espera la decisión de la entidad demo. Si solicita correcciones, aparecerán aquí.</p></div>`;\n  else if (caseData.status === "approved" || caseData.status === "issued") html = `<div class="approved-note"><b>Expediente aprobado por la entidad demo.</b><p>La emisión final queda habilitada.</p></div>`;
+  else if (caseData.status === "submitted") html = `<div class="ready-note"><b>Expediente enviado a revisión.</b><p>Espera la decisión de la entidad demo. Si solicita correcciones, aparecerán aquí.</p></div>`;
+  else if (caseData.status === "approved" || caseData.status === "issued") html = `<div class="approved-note"><b>Expediente aprobado por la entidad demo.</b><p>La emisión final queda habilitada.</p></div>`;
   else if (missing.length) html = `<div class="missing-note"><b>Antes de enviar, completa:</b><p>${missing.map(escapeHtml).join(" · ")}</p></div>`;
   else html = `<div class="ready-note"><b>Expediente listo para revisión.</b><p>La entidad revisará la información y podrá aprobar o solicitar correcciones.</p></div>`;
   $("#submission-status").innerHTML = html;
