@@ -94,6 +94,11 @@ form.addEventListener("submit", (event) => {
     <div class="generated-plan"><div class="plan-label">ESQUEMA ILUSTRATIVO <span>${width} × ${length} m</span></div><div class="generated-room"><div class="zone z-kitchen">Área de trabajo</div><div class="zone z-store">Almacenamiento</div><div class="zone z-counter">Atención / caja</div><div class="zone z-seats">Área de clientes</div><div class="plan-door">ENTRADA / SALIDA</div><div class="plan-arrow">↗</div><div class="plan-ext">EXT.</div></div></div>
     <div class="checklist-head"><h4>Tu checklist inicial</h4><span>${requirements.length} puntos</span></div><ul class="requirements">${requirements.map((r,i)=>`<li><span>${String(i+1).padStart(2,"0")}</span>${r}</li>`).join("")}</ul>
     <div class="suggested-signs"><b>Señalética para revisar</b><div><span>↗ Salida</span><span>✚ Extintor</span><span>♿ Accesibilidad</span><span>⚠ Riesgos</span></div></div>
-    <p class="result-disclaimer">Lista orientativa, no exhaustiva. Verifica las normas vigentes de tu ciudad y actividad antes de realizar obras o solicitar permisos.</p></div>`;
+    <p class="result-disclaimer">Lista orientativa, no exhaustiva. Verifica las normas vigentes de tu ciudad y actividad antes de realizar obras o solicitar permisos.</p><div class="result-next-step"><button class="primary-btn" id="go-private-workflow" type="button">Continuar con expediente privado →</button><p>Se trasladarán actividad, ciudad y medidas al expediente cifrado. Completa allí los datos restantes y revisa los documentos.</p></div></div>`;
+  document.querySelector("#go-private-workflow").addEventListener("click",()=>{
+    const detail={businessType:type,activity:businessNames[type],city,area,width,depth:Number(length)};
+    document.dispatchEvent(new CustomEvent("localia:quick-start",{detail}));
+    document.querySelector("#localia-workflow").scrollIntoView({behavior:"smooth",block:"start"});
+  });
   document.querySelector("#result").scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
