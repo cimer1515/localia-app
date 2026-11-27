@@ -2,6 +2,12 @@
 
 LOCALIA ayuda a emprendedores a preparar la apertura de un negocio: organiza datos del establecimiento, crea un checklist orientativo, permite distribuir cocina, baño, bodega, atención, entrada y salida en un plano editable, muestra señalética y circulación, prepara documentos de trabajo y conduce un expediente por revisión, correcciones y aprobación.
 
+## Prueba rápida de certificados (sin blockchain)
+
+La página independiente `/demo.html` permite abrir los tres certificados ficticios desde el inicio, ver sus QR y hashes de ejemplo, imprimir cada certificado por separado y simular el flujo de envío, correcciones, reenvío y aprobación de la entidad demo. No requiere crear bóveda ni conectar wallet. No usa ME Network ni guarda datos del usuario.
+
+Para abrirla en desarrollo: ejecuta `npm run dev` y entra a `/demo.html`. La página principal también incluye un acceso directo a esta prueba. La página demo no reemplaza el flujo privado completo del expediente.
+
 ## Flujo de la demostración
 
 1. El usuario crea una bóveda con contraseña.
