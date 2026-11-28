@@ -1,4 +1,5 @@
 import { BrowserProvider, Contract, keccak256 } from "ethers";
+import { hashDocument } from "./document-hash.js";
 
 const registryAbi = [
   "function owner() view returns (address)",
@@ -11,7 +12,7 @@ const registryAbi = [
 
 const chainIdSetting = import.meta.env.VITE_ME_EVM_CHAIN_ID;
 const expectedChainId = chainIdSetting ? Number(chainIdSetting) : null;
-const registryAddress = import.meta.env.VITE_LOCALIA_REGISTRY_ADDRESS || "";
+const registryAddress = import.meta.env.VITE_CAUSA_REGISTRY_ADDRESS || "";
 
 let browserProvider;
 let connectedAddress = "";
@@ -24,7 +25,7 @@ export async function connectMEWallet() {
   if (!accounts?.length) throw new Error("No se autorizó ninguna cuenta.");
   const network = await browserProvider.getNetwork();
   if (Number(network.chainId) !== expectedChainId) {
-    throw new Error(`La wallet está en chain ID ${network.chainId}. LOCALIA espera ${expectedChainId}. Selecciona la red ME Network correcta.`);
+    throw new Error(`La wallet está en chain ID ${network.chainId}. CAUSA espera ${expectedChainId}. Selecciona la red ME Network correcta.`);
   }
   connectedAddress = accounts[0];
   return { address: connectedAddress, chainId: Number(network.chainId) };
@@ -39,12 +40,6 @@ async function getRegistry(write = false) {
   if (!registryAddress) throw new Error("Falta configurar VITE_LOCALIA_REGISTRY_ADDRESS después de desplegar el contrato.");
   const signerOrProvider = write ? await browserProvider.getSigner() : browserProvider;
   return new Contract(registryAddress, registryAbi, signerOrProvider);
-}
-
-/// Hash the exact document bytes locally. The file itself is never uploaded to ME Network.
-export async function hashDocument(file) {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  return keccak256(bytes);
 }
 
 export function createCredentialId() {

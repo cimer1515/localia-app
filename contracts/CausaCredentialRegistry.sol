@@ -27,12 +27,12 @@ contract CausaCredentialRegistry {
     event CredentialRevoked(bytes32 indexed credentialId, address indexed issuer);
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "LOCALIA: owner only");
+        require(msg.sender == owner, "CAUSA: owner only");
         _;
     }
 
     modifier onlyIssuer() {
-        require(authorizedIssuers[msg.sender], "LOCALIA: issuer not authorized");
+        require(authorizedIssuers[msg.sender], "CAUSA: issuer not authorized");
         _;
     }
 
@@ -43,12 +43,12 @@ contract CausaCredentialRegistry {
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "LOCALIA: zero owner");
+        require(newOwner != address(0), "CAUSA: zero owner");
         owner = newOwner;
     }
 
     function setIssuer(address issuer, bool authorized) external onlyOwner {
-        require(issuer != address(0), "LOCALIA: zero issuer");
+        require(issuer != address(0), "CAUSA: zero issuer");
         authorizedIssuers[issuer] = authorized;
         emit IssuerAuthorizationChanged(issuer, authorized);
     }
@@ -56,9 +56,9 @@ contract CausaCredentialRegistry {
     /// @param credentialId Unique opaque ID (prefer random; do not use personal identifiers).
     /// @param documentHash Hash of the certificate/document created off-chain.
     function registerCredential(bytes32 credentialId, bytes32 documentHash) external onlyIssuer {
-        require(credentialId != bytes32(0), "LOCALIA: empty ID");
-        require(documentHash != bytes32(0), "LOCALIA: empty hash");
-        require(credentials[credentialId].issuedAt == 0, "LOCALIA: already registered");
+        require(credentialId != bytes32(0), "CAUSA: empty ID");
+        require(documentHash != bytes32(0), "CAUSA: empty hash");
+        require(credentials[credentialId].issuedAt == 0, "CAUSA: already registered");
 
         credentials[credentialId] = Credential({
             documentHash: documentHash,
@@ -72,9 +72,9 @@ contract CausaCredentialRegistry {
 
     function revokeCredential(bytes32 credentialId) external {
         Credential storage credential = credentials[credentialId];
-        require(credential.issuedAt != 0, "LOCALIA: unknown credential");
-        require(msg.sender == credential.issuer || msg.sender == owner, "LOCALIA: not issuer or owner");
-        require(!credential.revoked, "LOCALIA: already revoked");
+        require(credential.issuedAt != 0, "CAUSA: unknown credential");
+        require(msg.sender == credential.issuer || msg.sender == owner, "CAUSA: not issuer or owner");
+        require(!credential.revoked, "CAUSA: already revoked");
 
         credential.revoked = true;
         emit CredentialRevoked(credentialId, msg.sender);
