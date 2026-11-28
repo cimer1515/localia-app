@@ -5,6 +5,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.issuer_roles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   active boolean not null default false,
+  issuer_name text not null,
   created_at timestamptz not null default now()
 );
 
