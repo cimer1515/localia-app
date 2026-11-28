@@ -28,7 +28,7 @@ const businessNames = { cafe: "Cafetería / restaurante", shop: "Tienda comercia
 
 app.innerHTML = `
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="CAUSA inicio"><span class="brand-mark">L</span><span>CAUSA<small>BUSINESS SETUP</small></span></a>
+    <a class="brand" href="#top" aria-label="CAUSA inicio"><span class="brand-mark">C</span><span>CAUSA<small>BUSINESS SETUP</small></span></a>
     <nav><a href="#como-funciona">Cómo funciona</a><a href="#herramienta">Diseñar mi local</a></nav>
     <a class="top-cta" href="#herramienta">Comenzar <span>↗</span></a>
   </header>
@@ -74,7 +74,7 @@ app.innerHTML = `
     </section>
     <section class="trust-note"><span class="shield">◇</span><div><b>Preparación clara. Decisiones mejor informadas.</b><p>CAUSA ayuda a organizar y visualizar. No emite permisos oficiales ni reemplaza la revisión técnica o la aprobación de las autoridades.</p></div></section>
   </main>
-  <footer><a class="brand footer-brand" href="#top"><span class="brand-mark">C</span><span>CAUSA<small>BUSINESS SETUP</small></span></a><span>Construyendo el camino para abrir tu negocio.</span><a href="/legal.html">Legal y privacidad</a><a href="/legal.html">Legal y privacidad</a><span>Hackathon prototype · 2026</span></footer>
+  <footer><a class="brand footer-brand" href="#top"><span class="brand-mark">C</span><span>CAUSA<small>BUSINESS SETUP</small></span></a><span>Construyendo el camino para abrir tu negocio.</span><a href="/legal.html">Legal y privacidad</a><span>Hackathon prototype · 2026</span></footer>
 `;
 
 mountWorkflow();
