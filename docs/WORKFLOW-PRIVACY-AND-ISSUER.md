@@ -1,4 +1,4 @@
-# LOCALIA — flujo de expediente, revisión y certificado
+# CAUSA — flujo de expediente, revisión y certificado
 
 ## Proceso propuesto
 
@@ -6,8 +6,8 @@
 
 ### Responsabilidades
 
-- LOCALIA puede completar campos derivados, ajustar el esquema según medidas, generar checklists y producir una lista de correcciones a partir de observaciones.
-- LOCALIA no decide si un permiso es válido ni aprueba expedientes.
+- CAUSA puede completar campos derivados, ajustar el esquema según medidas, generar checklists y producir una lista de correcciones a partir de observaciones.
+- CAUSA no decide si un permiso es válido ni aprueba expedientes.
 - La entidad autorizada verifica la documentación y toma la decisión.
 - Si falta información o un documento no cumple, la entidad emite una corrección. La app la muestra, permite modificar los datos y volver a enviar.
 - Después de aprobación, el sistema prepara el certificado final y calcula su hash.
@@ -17,8 +17,8 @@
 
 El panel de entidad ficticia verifica campos, archivos obligatorios según actividad y una lista de revisión de cada documento generado. El usuario puede ubicar áreas en un plano de 10×8 celdas, revisar la imagen de señalética y flujo, descargar PNG o adjuntar el plano cifrado. La entidad puede solicitar correcciones y el usuario debe corregir y reenviar:
 
-- **Entidad:** Entidad demostrativa LOCALIA (no oficial)
-- **PIN de demo:** `LOCALIA-DEMO-2026`
+- **Entidad:** Entidad demostrativa CAUSA (no oficial)
+- **PIN de demo:** `CAUSA-DEMO-2026`
 - **Alcance:** mismo navegador y dispositivo con el expediente desbloqueado.
 - **Acciones:** ver datos de expediente, solicitar correcciones, aprobar demo.
 - **Resultado:** constancia de demostración con QR y hash.

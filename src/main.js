@@ -28,7 +28,7 @@ const businessNames = { cafe: "Cafetería / restaurante", shop: "Tienda comercia
 
 app.innerHTML = `
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="LOCALIA inicio"><span class="brand-mark">L</span><span>LOCALIA<small>BUSINESS SETUP</small></span></a>
+    <a class="brand" href="#top" aria-label="CAUSA inicio"><span class="brand-mark">C</span><span>CAUSA<small>BUSINESS SETUP</small></span></a>
     <nav><a href="#como-funciona">Cómo funciona</a><a href="#herramienta">Diseñar mi local</a></nav>
     <a class="top-cta" href="#herramienta">Comenzar <span>↗</span></a>
   </header>
@@ -61,7 +61,7 @@ app.innerHTML = `
       </div>
     </section>
     <section class="tool-section" id="herramienta">
-      <div class="section-heading"><div><div class="eyebrow">PRIMERA HERRAMIENTA</div><h2>Comienza a preparar<br><em>tu establecimiento.</em></h2></div><p>Cuéntanos lo básico. LOCALIA generará una guía inicial para que sepas qué revisar y cómo organizar tu espacio.</p></div>
+      <div class="section-heading"><div><div class="eyebrow">PRIMERA HERRAMIENTA</div><h2>Comienza a preparar<br><em>tu establecimiento.</em></h2></div><p>Cuéntanos lo básico. CAUSA generará una guía inicial para que sepas qué revisar y cómo organizar tu espacio.</p></div>
       <div class="tool-card">
         <div class="form-side"><div class="step-label">PASO 1 <span>· Información del negocio</span></div><form id="business-form">
           <label>¿Qué tipo de negocio quieres abrir?<select id="business-type"><option value="cafe">Cafetería / restaurante</option><option value="shop">Tienda comercial</option><option value="office">Oficina / servicios</option></select></label>
@@ -72,9 +72,9 @@ app.innerHTML = `
         <div class="result-side" id="result"><div class="result-placeholder"><div class="placeholder-icon">⌘</div><h3>Tu guía aparecerá aquí</h3><p>Completa la información y genera una primera lista de requisitos junto a un esquema de distribución ilustrativo.</p></div></div>
       </div>
     </section>
-    <section class="trust-note"><span class="shield">◇</span><div><b>Preparación clara. Decisiones mejor informadas.</b><p>LOCALIA ayuda a organizar y visualizar. No emite permisos oficiales ni reemplaza la revisión técnica o la aprobación de las autoridades.</p></div></section>
+    <section class="trust-note"><span class="shield">◇</span><div><b>Preparación clara. Decisiones mejor informadas.</b><p>CAUSA ayuda a organizar y visualizar. No emite permisos oficiales ni reemplaza la revisión técnica o la aprobación de las autoridades.</p></div></section>
   </main>
-  <footer><a class="brand footer-brand" href="#top"><span class="brand-mark">L</span><span>LOCALIA<small>BUSINESS SETUP</small></span></a><span>Construyendo el camino para abrir tu negocio.</span><span>Hackathon prototype · 2026</span></footer>
+  <footer><a class="brand footer-brand" href="#top"><span class="brand-mark">C</span><span>CAUSA<small>BUSINESS SETUP</small></span></a><span>Construyendo el camino para abrir tu negocio.</span><a href="/legal.html">Legal y privacidad</a><span>Hackathon prototype · 2026</span></footer>
 `;
 
 mountWorkflow();

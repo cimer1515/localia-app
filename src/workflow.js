@@ -3,8 +3,8 @@ import { connectMEWallet, registerDocumentHash, createCredentialId } from "./me-
 import "./workflow.css";
 
 const STORAGE_KEY = "localia.case.v1";
-const DEMO_REVIEW_PIN = "LOCALIA-DEMO-2026";
-const DEMO_ISSUER = "Entidad demostrativa LOCALIA (no oficial)";
+const DEMO_REVIEW_PIN = "CAUSA-DEMO-2026";
+const DEMO_ISSUER = "Entidad demostrativa CAUSA (no oficial)";
 const AREA_TYPES = {
  kitchen:{label:"Cocina",icon:"♨",color:"#fce6d5",sign:"COCINA"},
  restroom:{label:"Baño",icon:"🚻",color:"#e8e2f8",sign:"BAÑO"},
@@ -159,7 +159,7 @@ function renderShell() {
         </article>
       </div>
       <article class="workflow-panel requirements-panel">
-        <div class="panel-title"><span>04</span><div><b>Certificados y documentos que preparar</b><small>Vista previa antes de completar y enviar</small></div></div><p class="plan-warning">LOCALIA prepara borradores y checklist, no emite permisos oficiales. Confirma la lista con la entidad competente.</p>
+        <div class="panel-title"><span>04</span><div><b>Certificados y documentos que preparar</b><small>Vista previa antes de completar y enviar</small></div></div><p class="plan-warning">CAUSA prepara borradores y checklist, no emite permisos oficiales. Confirma la lista con la entidad competente.</p>
         <div class="generated-documents" id="generated-documents"></div><div class="requirements-output" id="requirements-output"></div>
         <div class="document-add"><label>Tipo de documento<select id="document-type"><option value="Croquis / plano">Croquis / plano</option><option value="Documento del responsable">Documento del responsable</option><option value="Respaldo de ubicación del local">Respaldo de ubicación del local</option><option value="Documento sanitario">Documento sanitario</option><option value="Documento de seguridad / prevención">Documento de seguridad / prevención</option><option value="Documento comercial / tributario">Documento comercial / tributario</option><option value="Otro documento">Otro documento</option></select></label><label>Nombre del documento<input id="document-name" maxlength="120" placeholder="Nombre o referencia del documento"></label><label>Archivo PDF o imagen (máx. 180 KB)<input id="document-file" type="file" accept=".pdf,image/png,image/jpeg,image/webp"></label><button class="secondary-btn" id="add-document" type="button">Cifrar y añadir</button></div>
         <p class="form-feedback" id="document-feedback" aria-live="polite"></p>
@@ -225,7 +225,7 @@ function planSvg() {
     s+='<text x="'+(ent.x+8)+'" y="'+(ent.y-10)+'" font-size="12" font-weight="bold" fill="#15835e">FLUJO</text>';
   }
   Object.keys(cells).forEach(k=>{const a=AREA_TYPES[cells[k]];if(!a)return;const col=Number(k)%10,row=Math.floor(Number(k)/10),x=col*CW+62,y=row*CH+14;s+='<circle cx="'+x+'" cy="'+y+'" r="12" fill="#d93e43" stroke="#fff" stroke-width="2"/><text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">S</text>';});
-  s+='<text x="18" y="468" font-size="10" fill="#687b93">LOCALIA · CROQUIS REFERENCIAL · NO ES PLANO TÉCNICO</text></svg>';
+  s+='<text x="18" y="468" font-size="10" fill="#687b93">CAUSA · CROQUIS REFERENCIAL · NO ES PLANO TÉCNICO</text></svg>';
   return s;
 }
 function renderPlan() {
@@ -247,7 +247,7 @@ function renderPlan() {
 }
 async function downloadPlanPng() {
   const svg=planSvg(),blob=new Blob([svg],{type:"image/svg+xml;charset=utf-8"}),url=URL.createObjectURL(blob),img=new Image();
-  img.onload=()=>{const canvas=document.createElement("canvas");canvas.width=1600;canvas.height=960;const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(png=>{if(!png)return;const link=document.createElement("a");link.href=URL.createObjectURL(png);link.download="LOCALIA-plano-senaletica.png";link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);},"image/png");};
+  img.onload=()=>{const canvas=document.createElement("canvas");canvas.width=1600;canvas.height=960;const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(png=>{if(!png)return;const link=document.createElement("a");link.href=URL.createObjectURL(png);link.download="CAUSA-plano-senaletica.png";link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);},"image/png");};
   img.onerror=()=>URL.revokeObjectURL(url);img.src=url;
 }
 function generatedDocuments() {
@@ -269,13 +269,13 @@ function renderGeneratedDocuments() {
   target.innerHTML='<div class="generated-doc-intro">Se prepararán '+docs.length+' documentos de trabajo según el tipo de negocio. Puedes abrirlos antes de completar los datos.</div>'+docs.map(d=>'<div class="generated-doc-row"><div><b>'+escapeHtml(d.title)+'</b><small>'+escapeHtml(d.scope)+'</small></div><button class="secondary-btn" type="button" data-doc-preview="'+d.key+'">Ver borrador</button></div>').join("")+'<div class="demo-cert-preview"><b>Constancias de demostración que la entidad emitirá después de aprobar</b>'+DEMO_CERTIFICATE_TYPES.map(d=>'<div class="generated-doc-row"><div><b>'+escapeHtml(d.title)+'</b><small>'+escapeHtml(d.scope)+'</small></div><button class="secondary-btn" type="button" data-cert-preview="'+d.key+'">Ver modelo</button></div>').join("")+'</div><div id="document-preview-area"></div>';
   target.querySelectorAll("[data-cert-preview]").forEach(btn=>btn.addEventListener("click",()=>{
     const type=DEMO_CERTIFICATE_TYPES.find(d=>d.key===btn.getAttribute("data-cert-preview"));if(!type)return;
-    const preview='<div class="document-preview"><div class="doc-preview-head">LOCALIA · CERTIFICADO DEMO · NO OFICIAL</div><h3>'+escapeHtml(type.title)+'</h3><p><b>Establecimiento:</b> '+escapeHtml(form.businessName||"[Se completará con los datos del negocio]")+'</p><p><b>Actividad:</b> '+escapeHtml(form.activity||"[Actividad por completar]")+'</p><p><b>Entidad:</b> '+escapeHtml(DEMO_ISSUER)+'</p><p><b>Alcance:</b> '+escapeHtml(type.scope)+'</p><div class="doc-preview-notice">Modelo de certificado que se generará solo después de la revisión y aprobación de la entidad de prueba. No es un permiso legal ni un certificado oficial.</div><button class="secondary-btn" id="print-preview-doc" type="button">Imprimir modelo</button></div>';
+    const preview='<div class="document-preview"><div class="doc-preview-head">CAUSA · CERTIFICADO DEMO · NO OFICIAL</div><h3>'+escapeHtml(type.title)+'</h3><p><b>Establecimiento:</b> '+escapeHtml(form.businessName||"[Se completará con los datos del negocio]")+'</p><p><b>Actividad:</b> '+escapeHtml(form.activity||"[Actividad por completar]")+'</p><p><b>Entidad:</b> '+escapeHtml(DEMO_ISSUER)+'</p><p><b>Alcance:</b> '+escapeHtml(type.scope)+'</p><div class="doc-preview-notice">Modelo de certificado que se generará solo después de la revisión y aprobación de la entidad de prueba. No es un permiso legal ni un certificado oficial.</div><button class="secondary-btn" id="print-preview-doc" type="button">Imprimir modelo</button></div>';
     $("#document-preview-area").innerHTML=preview;$("#print-preview-doc").addEventListener("click",()=>window.print());
   }));
   target.querySelectorAll("[data-doc-preview]").forEach(btn=>btn.addEventListener("click",()=>{
     const doc=docs.find(d=>d.key===btn.getAttribute("data-doc-preview"));if(!doc)return;
     const filled=!!(form.businessName&&form.activity&&form.city&&form.address&&form.ownerName);
-    const body='<div class="document-preview"><div class="doc-preview-head">LOCALIA · DOCUMENTO DE PREPARACIÓN · NO OFICIAL</div><h3>'+escapeHtml(doc.title)+'</h3><p><b>Negocio:</b> '+escapeHtml(form.businessName||"[Nombre del negocio por completar]")+'</p><p><b>Actividad:</b> '+escapeHtml(form.activity||"[Actividad por completar]")+'</p><p><b>Responsable:</b> '+escapeHtml(form.ownerName||"[Responsable por completar]")+'</p><p><b>Ubicación:</b> '+escapeHtml(form.address||"[Dirección por completar]")+', '+escapeHtml(form.city||"[Ciudad]")+'</p><p><b>Área:</b> '+escapeHtml(form.area||"[Área en m²]")+'</p><p><b>Contenido:</b> '+escapeHtml(doc.scope)+'</p><p><b>Estado:</b> '+(filled?"Borrador prellenado · revisar antes de entregar":"Plantilla previa · faltan datos")+'</p><div class="doc-preview-notice">Este documento es una plantilla de preparación de LOCALIA. No es un certificado emitido ni sustituye el formulario oficial de la entidad competente.</div><button class="secondary-btn" id="print-preview-doc" type="button">Imprimir / guardar PDF</button></div>';
+    const body='<div class="document-preview"><div class="doc-preview-head">CAUSA · DOCUMENTO DE PREPARACIÓN · NO OFICIAL</div><h3>'+escapeHtml(doc.title)+'</h3><p><b>Negocio:</b> '+escapeHtml(form.businessName||"[Nombre del negocio por completar]")+'</p><p><b>Actividad:</b> '+escapeHtml(form.activity||"[Actividad por completar]")+'</p><p><b>Responsable:</b> '+escapeHtml(form.ownerName||"[Responsable por completar]")+'</p><p><b>Ubicación:</b> '+escapeHtml(form.address||"[Dirección por completar]")+', '+escapeHtml(form.city||"[Ciudad]")+'</p><p><b>Área:</b> '+escapeHtml(form.area||"[Área en m²]")+'</p><p><b>Contenido:</b> '+escapeHtml(doc.scope)+'</p><p><b>Estado:</b> '+(filled?"Borrador prellenado · revisar antes de entregar":"Plantilla previa · faltan datos")+'</p><div class="doc-preview-notice">Este documento es una plantilla de preparación de CAUSA. No es un certificado emitido ni sustituye el formulario oficial de la entidad competente.</div><button class="secondary-btn" id="print-preview-doc" type="button">Imprimir / guardar PDF</button></div>';
     $("#document-preview-area").innerHTML=body;$("#print-preview-doc").addEventListener("click",()=>window.print());
   }));
 }
@@ -349,7 +349,7 @@ function renderReviewer() {
       caseData.correctionIssuedAt = new Date().toISOString();
       await saveEncryptedCase(); renderAll();
       $("#reviewer-workspace").classList.remove("hidden"); renderReviewer();
-      $("#reviewer-workspace").insertAdjacentHTML("afterbegin", `<div class="correction-document"><b>Documento de corrección LOCALIA · DEMO</b><p>${caseData.corrections.map(escapeHtml).join("<br>")}</p><button class="secondary-btn" id="print-correction">Imprimir / guardar PDF</button></div>`);
+      $("#reviewer-workspace").insertAdjacentHTML("afterbegin", `<div class="correction-document"><b>Documento de corrección CAUSA · DEMO</b><p>${caseData.corrections.map(escapeHtml).join("<br>")}</p><button class="secondary-btn" id="print-correction">Imprimir / guardar PDF</button></div>`);
       $("#print-correction").addEventListener("click",()=>window.print());
     });
     $("#approve-case").addEventListener("click", async () => {
@@ -385,13 +385,13 @@ async function renderCertificate() {
   let html="";
   for(const c of list){
     const qrPayload=c.meTxHash
-      ? "LOCALIA-ME-MAINNET|ID:"+c.certificateId+"|HASH:"+c.documentHash+"|TX:"+c.meTxHash+"|CHAIN:"+c.meChainId+"|DEMO-NOT-OFFICIAL"
-      : "LOCALIA-DEMO-CERT|ID:"+c.certificateId+"|HASH:"+c.documentHash+"|STATUS:NOT-ON-CHAIN|DEMO-NOT-OFFICIAL";
+      ? "CAUSA-ME-MAINNET|ID:"+c.certificateId+"|HASH:"+c.documentHash+"|TX:"+c.meTxHash+"|CHAIN:"+c.meChainId+"|DEMO-NOT-OFFICIAL"
+      : "CAUSA-DEMO-CERT|ID:"+c.certificateId+"|HASH:"+c.documentHash+"|STATUS:NOT-ON-CHAIN|DEMO-NOT-OFFICIAL";
     let qr="";try{qr=await QRCode.toDataURL(qrPayload,{width:180,margin:1,errorCorrectionLevel:"M"});}catch{}
     const chainStatus=c.meTxHash
       ? '<small class="chain-status">Registrado en ME Network mainnet</small><small>Tx: <code>'+escapeHtml(c.meTxHash)+'</code></small>'
       : '<small class="chain-status pending">Aún no registrado en blockchain</small>';
-    html+='<div class="demo-certificate"><div class="cert-top">LOCALIA <span>CONSTANCIA DE DEMOSTRACIÓN</span></div><div class="cert-stamp">DEMO<br>NO OFICIAL</div><h3>'+escapeHtml(c.certificateType||"Constancia de flujo de aprobación")+'</h3><p>Este documento demuestra que la entidad de prueba revisó el expediente. <b>No es permiso de funcionamiento ni certificado emitido por autoridad pública.</b></p><div class="cert-data"><div><small>Establecimiento</small><b>'+escapeHtml(c.businessName)+'</b></div><div><small>Actividad</small><b>'+escapeHtml(c.activity)+'</b></div><div><small>Ciudad</small><b>'+escapeHtml(c.city)+'</b></div><div><small>Entidad demo</small><b>'+escapeHtml(c.issuer)+'</b></div><div><small>ID</small><b>'+escapeHtml(c.certificateId)+'</b></div><div><small>Fecha de aprobación</small><b>'+new Date(c.approvedAt).toLocaleString("es-EC")+'</b></div></div><div class="cert-bottom">'+(qr?'<img src="'+qr+'" alt="QR de certificado demo">':"")+'<div><small>Huella SHA-256</small><code>'+c.documentHash+'</code>'+chainStatus+'<small>El registro blockchain contiene solo ID opaco y hash; no datos personales.</small></div></div></div>';
+    html+='<div class="demo-certificate"><div class="cert-top">CAUSA <span>CONSTANCIA DE DEMOSTRACIÓN</span></div><div class="cert-stamp">DEMO<br>NO OFICIAL</div><h3>'+escapeHtml(c.certificateType||"Constancia de flujo de aprobación")+'</h3><p>Este documento demuestra que la entidad de prueba revisó el expediente. <b>No es permiso de funcionamiento ni certificado emitido por autoridad pública.</b></p><div class="cert-data"><div><small>Establecimiento</small><b>'+escapeHtml(c.businessName)+'</b></div><div><small>Actividad</small><b>'+escapeHtml(c.activity)+'</b></div><div><small>Ciudad</small><b>'+escapeHtml(c.city)+'</b></div><div><small>Entidad demo</small><b>'+escapeHtml(c.issuer)+'</b></div><div><small>ID</small><b>'+escapeHtml(c.certificateId)+'</b></div><div><small>Fecha de aprobación</small><b>'+new Date(c.approvedAt).toLocaleString("es-EC")+'</b></div></div><div class="cert-bottom">'+(qr?'<img src="'+qr+'" alt="QR de certificado demo">':"")+'<div><small>Huella SHA-256</small><code>'+c.documentHash+'</code>'+chainStatus+'<small>El registro blockchain contiene solo ID opaco y hash; no datos personales.</small></div></div></div>';
   }
   const registered=list.filter(c=>c.meTxHash).length;
   const pending=list.length-registered;
@@ -401,7 +401,7 @@ async function renderCertificate() {
   $("#certificate-output").innerHTML=html+chainButton+'<button class="secondary-btn" id="print-cert">Imprimir / guardar todos los certificados PDF</button><button class="secondary-btn" id="download-cert">Descargar paquete JSON</button><p class="result-disclaimer">La aprobación es simulada. El registro on-chain acredita la huella y la transacción, no convierte el documento en permiso oficial.</p>';
   $("#print-cert").addEventListener("click",()=>window.print());
   $("#download-cert").addEventListener("click",()=>{
-    const blob=new Blob([JSON.stringify(list,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="LOCALIA-certificados-demo.json";a.click();URL.revokeObjectURL(url);
+    const blob=new Blob([JSON.stringify(list,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="CAUSA-certificados-demo.json";a.click();URL.revokeObjectURL(url);
   });
   if(pending){
     $("#register-me-chain").addEventListener("click",async()=>{
@@ -481,8 +481,8 @@ export function mountWorkflow() {
     const svg=planSvg(),blob=new Blob([svg],{type:"image/svg+xml;charset=utf-8"}),url=URL.createObjectURL(blob),img=new Image();
     img.onload=async()=>{const canvas=document.createElement("canvas");canvas.width=1600;canvas.height=960;canvas.getContext("2d").drawImage(img,0,0,1600,960);URL.revokeObjectURL(url);canvas.toBlob(async png=>{
       if(!png)return;const bytes=new Uint8Array(await png.arrayBuffer());if(bytes.length>180*1024){$("#document-feedback").textContent="El plano generado supera 180 KB. Descárgalo y comprímelo antes de adjuntar.";return;}
-      caseData.documents=caseData.documents||[];const existing=caseData.documents.findIndex(d=>d.type==="Croquis / plano"&&d.name==="Plano LOCALIA generado");
-      const record={type:"Croquis / plano",name:"Plano LOCALIA generado",fileName:"LOCALIA-plano-senaletica.png",mimeType:"image/png",encryptedPayload:toBase64(bytes),addedAt:new Date().toISOString(),status:"declarado"};
+      caseData.documents=caseData.documents||[];const existing=caseData.documents.findIndex(d=>d.type==="Croquis / plano"&&d.name==="Plano CAUSA generado");
+      const record={type:"Croquis / plano",name:"Plano CAUSA generado",fileName:"CAUSA-plano-senaletica.png",mimeType:"image/png",encryptedPayload:toBase64(bytes),addedAt:new Date().toISOString(),status:"declarado"};
       if(existing>=0)caseData.documents[existing]=record;else if(caseData.documents.length<8)caseData.documents.push(record);else{$("#document-feedback").textContent="Límite de 8 archivos alcanzado.";return;}
       await saveEncryptedCase();renderRequirements();$("#document-feedback").textContent="Plano PNG adjuntado y cifrado en el expediente.";
     },"image/png");};img.onerror=()=>URL.revokeObjectURL(url);img.src=url;

@@ -1,10 +1,10 @@
-# LOCALIA + ME Network: integración técnica
+# CAUSA + ME Network: integración técnica
 
 ## Decisión de arquitectura (noviembre de 2026)
 
 La documentación oficial de Meta Earth indica que ME Network mainnet es compatible con EVM desde el 15 de septiembre de 2026. Meta Earth también publica el paquete oficial `meta-earth-js-sdk`, que funciona en navegador y Node.js y documenta operaciones de contratos EVM.
 
-LOCALIA usará este camino para el prototipo:
+CAUSA usará este camino para el prototipo:
 
 - **Web UI:** JavaScript (Vite actualmente). JavaScript/TypeScript es válido para la aplicación cliente y puede usar el SDK oficial.
 - **Smart contract:** Solidity para la EVM de ME Network.
@@ -14,7 +14,7 @@ LOCALIA usará este camino para el prototipo:
 
 ## Contrato inicial
 
-`contracts/LocaliaCredentialRegistry.sol` permite:
+`contracts/CausaCredentialRegistry.sol` permite:
 1. Autorizar direcciones de emisores.
 2. Registrar un ID opaco y el hash de un documento.
 3. Verificar hash, emisor, fecha y estado.
@@ -28,9 +28,9 @@ La documentación oficial de ME indica que mainnet es EVM-compatible (anuncio de
 
 La documentación pública consultada no permite confirmar de forma segura el RPC EVM mainnet ni el chain ID numérico actual. Solicitar ambos al equipo oficial (devsupport@mec.me) o al canal técnico de HARBOR. El SDK oficial señala expresamente que las operaciones EVM mainnet requieren configurar `evmRpcUrl` y `evmChainId`.
 
-La app no activa el registro hasta que `VITE_ME_EVM_CHAIN_ID` y `VITE_LOCALIA_REGISTRY_ADDRESS` estén configurados. El deploy local requiere `ME_EVM_RPC_URL`, `ME_EVM_CHAIN_ID` y una clave de despliegue guardada únicamente en `.env`. Un sitio HTTPS necesita RPC HTTPS si se consulta directamente desde el navegador.
+La app no activa el registro hasta que `VITE_ME_EVM_CHAIN_ID` y `VITE_CAUSA_REGISTRY_ADDRESS` estén configurados. El deploy local requiere `ME_EVM_RPC_URL`, `ME_EVM_CHAIN_ID` y una clave de despliegue guardada únicamente en `.env`. Un sitio HTTPS necesita RPC HTTPS si se consulta directamente desde el navegador.
 
-## Flujo implementado en LOCALIA\n\nCuando el expediente demo pasa a `issued`, el panel permite conectar la wallet y registrar cada constancia. La app crea un ID opaco, envía `registerCredential(id, hash)` al contrato y guarda tx hash, chain ID y address emisora dentro del expediente cifrado. El QR se actualiza con esos datos. Cada transacción requiere aprobación de la wallet y gas. El contrato autoriza al deployer; otra wallet debe ser autorizada por el owner.\n\n## Seguridad
+## Flujo implementado en CAUSA\n\nCuando el expediente demo pasa a `issued`, el panel permite conectar la wallet y registrar cada constancia. La app crea un ID opaco, envía `registerCredential(id, hash)` al contrato y guarda tx hash, chain ID y address emisora dentro del expediente cifrado. El QR se actualiza con esos datos. Cada transacción requiere aprobación de la wallet y gas. El contrato autoriza al deployer; otra wallet debe ser autorizada por el owner.\n\n## Seguridad
 
 - Nunca guardar frases semilla ni claves privadas en el frontend, repositorio, Netlify variables públicas o localStorage.
 - No subir certificados completos, nombres, números de identificación, direcciones ni otros datos personales a la blockchain.

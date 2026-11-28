@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title LOCALIA Credential Registry
+/// @title CAUSA Credential Registry
 /// @notice Stores credential hashes and issuer/revocation metadata on an EVM-compatible ME Network.
 /// @dev Store only a hash or non-sensitive identifier on-chain. Never store personal documents or PII.
-contract LocaliaCredentialRegistry {
+contract CausaCredentialRegistry {
     address public owner;
 
     struct Credential {

@@ -13,10 +13,10 @@ const expectedChainId = Number(chainIdSetting);
 if (!rpcUrl || !privateKey) {
   throw new Error("Set ME_EVM_RPC_URL and ME_DEPLOYER_PRIVATE_KEY in your local .env file.");
 }
-if (!fs.existsSync("artifacts/LocaliaCredentialRegistry.json")) {
+if (!fs.existsSync("artifacts/CausaCredentialRegistry.json")) {
   throw new Error("Run npm run compile:contract first.");
 }
-const artifact = JSON.parse(fs.readFileSync("artifacts/LocaliaCredentialRegistry.json", "utf8"));
+const artifact = JSON.parse(fs.readFileSync("artifacts/CausaCredentialRegistry.json", "utf8"));
 const provider = new JsonRpcProvider(rpcUrl);
 const network = await provider.getNetwork();
 if (Number(network.chainId) !== expectedChainId) {
@@ -27,6 +27,6 @@ console.log("Deploying from:", wallet.address, "chainId:", network.chainId.toStr
 const factory = new ContractFactory(artifact.abi, artifact.bytecode, wallet);
 const contract = await factory.deploy();
 await contract.waitForDeployment();
-console.log("LocaliaCredentialRegistry:", await contract.getAddress());
+console.log("CausaCredentialRegistry:", await contract.getAddress());
 console.log("Deployment transaction:", contract.deploymentTransaction()?.hash);
-console.log("Add this address to VITE_LOCALIA_REGISTRY_ADDRESS in your local .env.");
+console.log("Add this address to VITE_CAUSA_REGISTRY_ADDRESS in your local .env.");
