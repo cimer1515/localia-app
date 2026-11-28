@@ -1,4 +1,4 @@
-name: Build LOCALIA
+name: Build CAUSA
 
 on:
   push:
