@@ -6,7 +6,7 @@ const ABI=["function verifyCredential(bytes32 credentialId,bytes32 documentHash)
 const html=(title,body,status=200)=>({statusCode:status,headers:{"content-type":"text/html; charset=utf-8","cache-control":"no-store"},body:`<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} · HARBOR</title><style>body{font:16px system-ui;background:#f3f6fa;color:#172b45;margin:0;padding:24px}.card{max-width:720px;margin:5vh auto;background:white;padding:28px;border-radius:18px;box-shadow:0 8px 30px #1b365012}h1{font-size:24px}.ok{color:#087443}.bad{color:#b42318}code{word-break:break-all;background:#f1f5f9;padding:8px;border-radius:6px;display:block}a{display:inline-block;margin-top:18px;color:#155eef;font-weight:600}</style><main class="card"><h1>HARBOR · Verificación de certificado</h1>${body}</main></html>`});
 export async function handler(event){
   try{
-    const id=decodeURIComponent((event.path||"").split("/").pop()||event.queryStringParameters?.id||"");
+    const id=decodeURIComponent(event.queryStringParameters?.id||(event.path||"").split("/").pop()||"");
     if(!id) return html("No encontrado",'<p class="bad">No se indicó un certificado.</p>',400);
     const supabase=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}});
     const {data:row,error}=await supabase.from("certificates").select("*").eq("certificate_id",id).maybeSingle();
