@@ -4,7 +4,7 @@ CAUSA ayuda a emprendedores a preparar la apertura de un negocio: organiza datos
 
 ## Prueba rápida de certificados (sin blockchain)
 
-La página independiente `/demo.html` permite abrir los tres certificados ficticios desde el inicio, ver sus QR y hashes de ejemplo, imprimir cada certificado por separado y simular el flujo de envío, correcciones, reenvío y aprobación de la entidad demo. No requiere crear bóveda ni conectar wallet. No usa ME Network ni guarda datos del usuario.
+La página independiente `/demo.html` permite abrir los tres certificados ficticios desde el inicio, ver sus QR y hashes de ejemplo, imprimir cada certificado por separado y simular el flujo de envío, correcciones, reenvío y aprobación de la entidad demo. No requiere crear bóveda ni conectar wallet. No usa ME Network ni envía datos a un servidor; el estado de la demo se guarda en el almacenamiento local del navegador.
 
 Para abrirla en desarrollo: ejecuta `npm run dev` y entra a `/demo.html`. La página principal también incluye un acceso directo a esta prueba. La página demo no reemplaza el flujo privado completo del expediente.
 
@@ -43,7 +43,7 @@ Hasta 8 archivos adjuntos de máximo 180 KB cada uno. El plano generado puede ad
 - La entidad demo solo puede revisar el expediente desbloqueado en el mismo navegador. Esto es una simulación, no un control de acceso institucional seguro.
 - No ingreses datos reales sensibles ni documentos reales en la demo pública.
 
-## Importante: seguridad y producción
+## Legal, privacidad y seguridad\n\nConsulta `/legal.html` para el borrador de términos y privacidad. Revisa `docs/LEGAL-PRIVACY-SECURITY-CAUSA.md` antes de cualquier lanzamiento. Los textos son borradores y deben completarse con la identidad legal del operador, canales de contacto, proveedores y revisión profesional ecuatoriana.\n\n## Importante: seguridad y producción
 
 El almacenamiento local cifrado es solo una solución demostrativa. Para que una entidad real revise expedientes desde otro equipo, CAUSA necesitará un backend seguro con:
 - autenticación de usuario y de entidad;
