@@ -402,7 +402,8 @@ async function renderCertificate() {
       ? '<form id="issuer-login" class="issuer-login"><label>Correo de entidad<input id="issuer-email" type="email" autocomplete="username" required></label><label>Contraseña<input id="issuer-password" type="password" autocomplete="current-password" required></label><button class="primary-btn" type="submit">Iniciar sesión y emitir automáticamente</button><p id="issuer-login-feedback" class="form-feedback" aria-live="polite"></p><button class="secondary-btn" id="issuer-retry" type="button">Reintentar emisión</button></form>'
       : '<p class="chain-status pending">Falta configurar Supabase Auth.</p>')
     : '<p class="chain-status">Todos los certificados están guardados y confirmados.</p>';
-  $("#certificate-output").innerHTML=html+issuanceMessage+authPanel+'<button class="secondary-btn" id="print-cert">Imprimir vista de certificados</button><button class="secondary-btn" id="download-cert">Descargar paquete JSON</button><p class="result-disclaimer">Esta aprobación es de demostración. La blockchain verifica integridad y registro; no convierte una constancia demo en permiso oficial.</p>';
+  $("#certificate-output").innerHTML=html+issuanceMessage+authPanel+'<button class="secondary-btn" id="preview-certificates">Generar PDF, SHA-256 y QR de prueba (sin blockchain)</button><div id="certificate-preview-results" aria-live="polite"></div><button class="secondary-btn" id="print-cert">Imprimir vista de certificados</button><button class="secondary-btn" id="download-cert">Descargar paquete JSON</button><p class="result-disclaimer">Esta aprobación es de demostración. La vista previa no se guarda en Supabase ni se registra en blockchain. El QR solo será verificable después de confirmar el registro real.</p>';
+  $("#preview-certificates").addEventListener("click",()=>runPreviewGeneration());
   $("#print-cert").addEventListener("click",()=>window.print());
   $("#download-cert").addEventListener("click",()=>{
     const blob=new Blob([JSON.stringify(list,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="LOCALIA-certificados-demo.json";a.click();URL.revokeObjectURL(url);
@@ -421,6 +422,31 @@ async function renderCertificate() {
       if(data?.session) runAutomaticIssuance(false);
     });
   }
+}
+async function runPreviewGeneration(){
+  const button=$("#preview-certificates"),target=$("#certificate-preview-results");
+  const list=caseData?.certificates||(caseData?.certificate?[caseData.certificate]:[]);
+  if(!list.length)return;
+  button.disabled=true;button.textContent="Generando PDF y calculando huellas...";
+  target.replaceChildren();
+  try{
+    for(const cert of list){
+      const response=await fetch("/.netlify/functions/preview-certificate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(cert)});
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error||"No se pudo generar el PDF de prueba.");
+      const bytes=Uint8Array.from(atob(result.pdfBase64),c=>c.charCodeAt(0));
+      const url=URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));
+      const card=document.createElement("div");card.className="certificate-preview-result";
+      const heading=document.createElement("b");heading.textContent=cert.certificateType+" · PDF generado";
+      const hashLabel=document.createElement("small");hashLabel.textContent="SHA-256 del PDF exacto:";
+      const hash=document.createElement("code");hash.textContent=result.sha256;
+      const link=document.createElement("a");link.href=url;link.download=cert.certificateId+"-PREVIEW.pdf";link.textContent="Abrir / descargar PDF de prueba";
+      const note=document.createElement("p");note.textContent="Solo vista previa. No está guardado en Supabase ni registrado en ME Network.";
+      card.append(heading,hashLabel,hash,link,note);target.append(card);
+    }
+  }catch(error){
+    const message=document.createElement("p");message.className="form-feedback";message.textContent=error?.message||String(error);target.append(message);
+  }finally{button.disabled=false;button.textContent="Generar PDF, SHA-256 y QR de prueba (sin blockchain)";}
 }
 async function runAutomaticIssuance(force=false){
   if(!supabaseClient||issuanceInProgress||!caseData||caseData.status!=="issued")return;
