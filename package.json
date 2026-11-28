@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "test": "node --test",
     "preview": "vite preview --host 0.0.0.0",
     "compile:contract": "node scripts/compile-contract.js",
     "deploy:me-contract": "node scripts/deploy-contract.js"
