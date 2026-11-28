@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - preparacion-final
+      - feature/automatic-certificate-issuance
       - main
   pull_request:
     branches:
@@ -23,3 +24,7 @@ jobs:
         run: npm install
       - name: Build Vite app
         run: npm run build
+      - name: Syntax-check Netlify functions
+        run: |
+          node --check netlify/functions/issue-certificate.mjs
+          node --check netlify/functions/verify-certificate.mjs
