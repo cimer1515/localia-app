@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { connectMEWallet, registerDocumentHash, createCredentialId } from "./me-network.js";
+import { supabaseClient } from "./supabase-client.js";
 import "./workflow.css";
 
 const STORAGE_KEY = "localia.case.v1";
@@ -27,6 +27,7 @@ let caseData = null;
 let cryptoKey = null;
 let saltBytes = null;
 let quickStartData = null;
+let issuanceInProgress = false;
 
 const $ = (sel) => document.querySelector(sel);
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (c) => ({
@@ -384,49 +385,72 @@ async function renderCertificate() {
   panel.classList.remove("hidden");
   let html="";
   for(const c of list){
-    const qrPayload=c.meTxHash
-      ? "LOCALIA-ME-MAINNET|ID:"+c.certificateId+"|HASH:"+c.documentHash+"|TX:"+c.meTxHash+"|CHAIN:"+c.meChainId+"|DEMO-NOT-OFFICIAL"
-      : "LOCALIA-DEMO-CERT|ID:"+c.certificateId+"|HASH:"+c.documentHash+"|STATUS:NOT-ON-CHAIN|DEMO-NOT-OFFICIAL";
-    let qr="";try{qr=await QRCode.toDataURL(qrPayload,{width:180,margin:1,errorCorrectionLevel:"M"});}catch{}
-    const chainStatus=c.meTxHash
-      ? '<small class="chain-status">Registrado en ME Network mainnet</small><small>Tx: <code>'+escapeHtml(c.meTxHash)+'</code></small>'
-      : '<small class="chain-status pending">Aún no registrado en blockchain</small>';
+    const qrPayload=c.backendStatus==="confirmed"&&c.verificationUrl?c.verificationUrl:"";
+    let qr="";try{if(qrPayload)qr=await QRCode.toDataURL(qrPayload,{width:180,margin:1,errorCorrectionLevel:"M"});}catch{}
+    const chainStatus=c.backendStatus==="confirmed"
+      ? '<small class="chain-status">Confirmado en ME Network</small><small>Tx: <code>'+escapeHtml(c.meTxHash||"")+'</code></small><small><a href="'+escapeHtml(c.verificationUrl||"")+'" target="_blank" rel="noopener">Verificar y abrir PDF</a></small>'
+      : '<small class="chain-status pending">'+escapeHtml(c.issuanceError||"Pendiente de registro automático en blockchain")+'</small>';
     html+='<div class="demo-certificate"><div class="cert-top">LOCALIA <span>CONSTANCIA DE DEMOSTRACIÓN</span></div><div class="cert-stamp">DEMO<br>NO OFICIAL</div><h3>'+escapeHtml(c.certificateType||"Constancia de flujo de aprobación")+'</h3><p>Este documento demuestra que la entidad de prueba revisó el expediente. <b>No es permiso de funcionamiento ni certificado emitido por autoridad pública.</b></p><div class="cert-data"><div><small>Establecimiento</small><b>'+escapeHtml(c.businessName)+'</b></div><div><small>Actividad</small><b>'+escapeHtml(c.activity)+'</b></div><div><small>Ciudad</small><b>'+escapeHtml(c.city)+'</b></div><div><small>Entidad demo</small><b>'+escapeHtml(c.issuer)+'</b></div><div><small>ID</small><b>'+escapeHtml(c.certificateId)+'</b></div><div><small>Fecha de aprobación</small><b>'+new Date(c.approvedAt).toLocaleString("es-EC")+'</b></div></div><div class="cert-bottom">'+(qr?'<img src="'+qr+'" alt="QR de certificado demo">':"")+'<div><small>Huella SHA-256</small><code>'+c.documentHash+'</code>'+chainStatus+'<small>El registro blockchain contiene solo ID opaco y hash; no datos personales.</small></div></div></div>';
   }
-  const registered=list.filter(c=>c.meTxHash).length;
+  const registered=list.filter(c=>c.backendStatus==="confirmed").length;
   const pending=list.length-registered;
-  const chainButton=pending
-    ? '<button class="primary-btn" id="register-me-chain">Conectar wallet y registrar constancias demo en ME Network</button>'
-    : '<p class="chain-status">Todas las constancias demo tienen registro en ME Network.</p>';
-  $("#certificate-output").innerHTML=html+chainButton+'<button class="secondary-btn" id="print-cert">Imprimir / guardar todos los certificados PDF</button><button class="secondary-btn" id="download-cert">Descargar paquete JSON</button><p class="result-disclaimer">La aprobación es simulada. El registro on-chain acredita la huella y la transacción, no convierte el documento en permiso oficial.</p>';
+  const issuanceMessage=!supabaseClient
+    ? '<p class="result-disclaimer">Conecta Supabase Auth para habilitar la emisión automática segura.</p>'
+    : '<p class="result-disclaimer">La emisión requiere iniciar sesión con una cuenta de entidad autorizada en Supabase. Tras aprobar, HARBOR genera el PDF, calcula SHA-256, lo guarda en Supabase, registra la huella en ME Network y activa el QR automáticamente.</p>';
+  const authPanel=pending
+    ? (supabaseClient
+      ? '<form id="issuer-login" class="issuer-login"><label>Correo de entidad<input id="issuer-email" type="email" autocomplete="username" required></label><label>Contraseña<input id="issuer-password" type="password" autocomplete="current-password" required></label><button class="primary-btn" type="submit">Iniciar sesión y emitir automáticamente</button><p id="issuer-login-feedback" class="form-feedback" aria-live="polite"></p><button class="secondary-btn" id="issuer-retry" type="button">Reintentar emisión</button></form>'
+      : '<p class="chain-status pending">Falta configurar Supabase Auth.</p>')
+    : '<p class="chain-status">Todos los certificados están guardados y confirmados.</p>';
+  $("#certificate-output").innerHTML=html+issuanceMessage+authPanel+'<button class="secondary-btn" id="print-cert">Imprimir vista de certificados</button><button class="secondary-btn" id="download-cert">Descargar paquete JSON</button><p class="result-disclaimer">Esta aprobación es de demostración. La blockchain verifica integridad y registro; no convierte una constancia demo en permiso oficial.</p>';
   $("#print-cert").addEventListener("click",()=>window.print());
   $("#download-cert").addEventListener("click",()=>{
     const blob=new Blob([JSON.stringify(list,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="LOCALIA-certificados-demo.json";a.click();URL.revokeObjectURL(url);
   });
-  if(pending){
-    $("#register-me-chain").addEventListener("click",async()=>{
-      const button=$("#register-me-chain");button.disabled=true;button.textContent="Conectando wallet...";
-      try{
-        const wallet=await connectMEWallet();
-        for(const cert of list){
-          if(cert.meTxHash)continue;
-          button.textContent="Registra "+cert.certificateType+" en ME Network...";
-          cert.meCredentialId=cert.meCredentialId||createCredentialId();
-          await saveEncryptedCase();
-          const receipt=await registerDocumentHash(cert.meCredentialId,"0x"+cert.documentHash);
-          cert.meTxHash=receipt.hash;cert.meChainId=wallet.chainId;cert.meIssuer=wallet.address;
-          await saveEncryptedCase();
-        }
-        $("#vault-note").textContent="Constancias demo registradas en ME Network. Revisa los hashes de transacción y el explorador oficial.";
-        await renderCertificate();
-      }catch(error){
-        $("#vault-note").textContent="No se pudo registrar en ME Network: "+(error?.shortMessage||error?.message||String(error));
-        button.disabled=false;button.textContent="Reintentar registro en ME Network";
-      }
+  if(pending&&supabaseClient){
+    $("#issuer-login")?.addEventListener("submit",async(event)=>{
+      event.preventDefault();
+      const feedback=$("#issuer-login-feedback");feedback.textContent="Validando cuenta de entidad...";
+      const {data,error}=await supabaseClient.auth.signInWithPassword({email:$("#issuer-email").value,password:$("#issuer-password").value});
+      if(error){feedback.textContent="No se pudo iniciar sesión: "+error.message;return;}
+      feedback.textContent="Cuenta autenticada. Iniciando emisión automática...";
+      await runAutomaticIssuance(true);
+    });
+    $("#issuer-retry")?.addEventListener("click",()=>runAutomaticIssuance(true));
+    supabaseClient.auth.getSession().then(({data})=>{
+      if(data?.session) runAutomaticIssuance(false);
     });
   }
 }
-
+async function runAutomaticIssuance(force=false){
+  if(!supabaseClient||issuanceInProgress||!caseData||caseData.status!=="issued")return;
+  const list=caseData.certificates||(caseData.certificate?[caseData.certificate]:[]);
+  const pending=list.filter(c=>c.backendStatus!=="confirmed"&&(force||!c.issuanceAttempted));
+  if(!pending.length)return;
+  const {data:{session}}=await supabaseClient.auth.getSession();
+  if(!session)return;
+  issuanceInProgress=true;
+  try{
+    for(const cert of pending){
+      cert.issuanceAttempted=true;cert.issuanceError="";
+      await saveEncryptedCase();
+      const response=await fetch("/.netlify/functions/issue-certificate",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+session.access_token},body:JSON.stringify({...cert,ownerId:session.user.id})});
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error||"La emisión automática falló.");
+      Object.assign(cert,{backendStatus:"confirmed",documentHash:result.sha256,meTxHash:result.txHash,meChainId:result.chainId,verificationUrl:result.verificationUrl,issuanceError:""});
+      await saveEncryptedCase();
+    }
+    $("#vault-note").textContent="Certificados guardados en Supabase y confirmados en ME Network. Los QR ya permiten verificar y abrir el PDF.";
+  }catch(error){
+    const failed=list.find(c=>c.backendStatus!=="confirmed");
+    if(failed)failed.issuanceError=error?.message||"Error de emisión";
+    await saveEncryptedCase();
+    $("#vault-note").textContent="La emisión no terminó: "+(error?.message||String(error));
+  }finally{
+    issuanceInProgress=false;
+    await renderCertificate();
+  }
+}
 function renderAll() {
   $("#vault-card").classList.add("hidden"); $("#workflow-content").classList.remove("hidden");
   renderProgress(); formFromCase(); renderPlan(); renderRequirements(); renderSubmission();
