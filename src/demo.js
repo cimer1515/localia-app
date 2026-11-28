@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import "./demo.css";
 
-const root=document.querySelector("#localia-demo");
+const root=document.querySelector("#causa-demo");
 const STORAGE="localia.single-flow.demo.v1";
 const areas=["Cocina","Baño","Bodega","Caja / atención","Área de clientes","Entrada","Salida","Extintor","Primeros auxilios","Accesibilidad"];
 const certTypes=[
