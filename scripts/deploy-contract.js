@@ -29,4 +29,4 @@ const contract = await factory.deploy();
 await contract.waitForDeployment();
 console.log("CausaCredentialRegistry:", await contract.getAddress());
 console.log("Deployment transaction:", contract.deploymentTransaction()?.hash);
-console.log("Add this address to VITE_LOCALIA_REGISTRY_ADDRESS in your local .env.");
+console.log("Add this address to VITE_CAUSA_REGISTRY_ADDRESS in your local .env.");
