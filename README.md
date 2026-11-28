@@ -1,6 +1,6 @@
-# LOCALIA — Business Setup & Compliance Assistant
+# CAUSA — Business Setup & Compliance Assistant
 
-LOCALIA ayuda a emprendedores a preparar la apertura de un negocio: organiza datos del establecimiento, crea un checklist orientativo, permite distribuir cocina, baño, bodega, atención, entrada y salida en un plano editable, muestra señalética y circulación, prepara documentos de trabajo y conduce un expediente por revisión, correcciones y aprobación.
+CAUSA ayuda a emprendedores a preparar la apertura de un negocio: organiza datos del establecimiento, crea un checklist orientativo, permite distribuir cocina, baño, bodega, atención, entrada y salida en un plano editable, muestra señalética y circulación, prepara documentos de trabajo y conduce un expediente por revisión, correcciones y aprobación.
 
 ## Prueba rápida de certificados (sin blockchain)
 
@@ -14,18 +14,18 @@ Para abrirla en desarrollo: ejecuta `npm run dev` y entra a `/demo.html`. La pá
 2. Ingresa la información del negocio y guarda un expediente cifrado localmente.
 3. Coloca las áreas del local en un plano de 10×8 celdas, revisa el flujo y la señalética, descarga el plano como PNG o lo adjunta cifrado al expediente. La distribución es personalizada, no un plano técnico.
 4. Envía el expediente al panel de la entidad de prueba.
-5. La entidad demo puede emitir un documento de corrección o aprobar. LOCALIA no aprueba permisos por sí sola.
+5. La entidad demo puede emitir un documento de corrección o aprobar. CAUSA no aprueba permisos por sí sola.
 6. La entidad debe verificar cada documento generado, revisar el plano y confirmar que estén adjuntos los respaldos requeridos por el tipo de negocio.
 7. Tras la aprobación demo, se generan tres constancias separadas, cada una con QR e identificador y hash SHA-256.
 
 ## Documentos previos y certificados demo
 
-Al elegir actividad, LOCALIA prepara borradores y vistas previas de la solicitud, declaración del responsable, croquis/señalética, checklist y fichas de preparación de seguridad y, cuando corresponde, sanitaria o comercial. También permite ver modelos de tres constancias que la entidad demo emitiría después de aprobar. Son plantillas de preparación, no permisos ni certificados oficiales.
+Al elegir actividad, CAUSA prepara borradores y vistas previas de la solicitud, declaración del responsable, croquis/señalética, checklist y fichas de preparación de seguridad y, cuando corresponde, sanitaria o comercial. También permite ver modelos de tres constancias que la entidad demo emitiría después de aprobar. Son plantillas de preparación, no permisos ni certificados oficiales.
 
 ## Entidad de prueba
 
-- Nombre: **Entidad demostrativa LOCALIA (no oficial)**.
-- Código de acceso demo: `LOCALIA-DEMO-2026`.
+- Nombre: **Entidad demostrativa CAUSA (no oficial)**.
+- Código de acceso demo: `CAUSA-DEMO-2026`.
 - Solo sirve para mostrar el flujo en el mismo navegador/dispositivo.
 - No es una entidad pública, no representa una autoridad de Ecuador y no emite permisos legales.
 - La entidad demo exige adjuntar los tipos de archivo requeridos para la actividad y marcar como revisados todos los documentos generados. Si algo falta, emite correcciones. Después de aprobar, se generan tres constancias de demostración no oficiales.
@@ -45,7 +45,7 @@ Hasta 8 archivos adjuntos de máximo 180 KB cada uno. El plano generado puede ad
 
 ## Importante: seguridad y producción
 
-El almacenamiento local cifrado es solo una solución demostrativa. Para que una entidad real revise expedientes desde otro equipo, LOCALIA necesitará un backend seguro con:
+El almacenamiento local cifrado es solo una solución demostrativa. Para que una entidad real revise expedientes desde otro equipo, CAUSA necesitará un backend seguro con:
 - autenticación de usuario y de entidad;
 - autorización por expediente, acceso mínimo y registro de auditoría;
 - cifrado en tránsito y cifrado de archivos en almacenamiento con gestión de claves;
@@ -79,7 +79,7 @@ Solicita al equipo de Meta Earth los datos oficiales de EVM mainnet y configura 
 - `ME_EVM_CHAIN_ID`: chain ID numérico EVM mainnet confirmado.
 - `ME_DEPLOYER_PRIVATE_KEY`: clave de una wallet de despliegue, solo en tu archivo local `.env`; nunca la compartas ni la subas a GitHub.
 - `VITE_ME_EVM_CHAIN_ID`: el mismo chain ID numérico, para validar la wallet en el navegador.
-- `VITE_LOCALIA_REGISTRY_ADDRESS`: dirección del contrato después de desplegarlo en mainnet.
+- `VITE_CAUSA_REGISTRY_ADDRESS`: dirección del contrato después de desplegarlo en mainnet.
 
 El registro requiere una wallet con fondos para gas y una dirección autorizada en el contrato. El deployer es el primer emisor autorizado. Si usarás otra wallet, el owner debe autorizarla.
 
