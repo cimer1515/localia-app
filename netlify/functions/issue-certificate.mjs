@@ -78,14 +78,28 @@ export async function handler(event) {
     if (!String(cert.status||"").toUpperCase().includes("DEMO")) return json(400,{error:"Esta función solo emite certificados de demostración en esta versión."});
     cert.issuer= user.issuerName;
     const verificationUrl=new URL("/verify/"+encodeURIComponent(cert.certificateId),process.env.HARBOR_SITE_URL).toString();
-    const pdf=await pdfBuffer(cert,verificationUrl);
-    const hash=createHash("sha256").update(pdf).digest("hex");
-    const hashBytes32="0x"+hash;
     const credentialId=keccak256(toUtf8Bytes(cert.certificateId));
     const storagePath=cert.certificateId+".pdf";
     const bucket=process.env.SUPABASE_CERT_BUCKET||"certificates";
-    const {error:uploadError}=await supabase.storage.from(bucket).upload(storagePath,pdf,{contentType:"application/pdf",upsert:true});
-    if (uploadError) throw new Error("No se pudo guardar el PDF en Supabase Storage: "+uploadError.message);
+    const {data:existing,error:existingError}=await supabase.from("certificates").select("certificate_id,sha256,tx_hash,chain_id,verification_url,status,storage_bucket,storage_path").eq("certificate_id",cert.certificateId).maybeSingle();
+    if(existingError)throw new Error("No se pudo consultar el registro previo: "+existingError.message);
+    if(existing?.status==="confirmed"){
+      const {data:savedFile,error:savedFileError}=await supabase.storage.from(existing.storage_bucket||bucket).download(existing.storage_path||storagePath);
+      if(savedFileError||!savedFile)throw new Error("El certificado ya está registrado, pero no se pudo recuperar su PDF original.");
+      const savedBytes=Buffer.from(await savedFile.arrayBuffer());
+      const savedHash=createHash("sha256").update(savedBytes).digest("hex");
+      if(savedHash!==existing.sha256)throw new Error("El PDF guardado no coincide con la huella previamente confirmada. No se sobrescribirá.");
+      return json(200,{ok:true,certificateId:cert.certificateId,sha256:existing.sha256,txHash:existing.tx_hash,chainId:existing.chain_id,verificationUrl:existing.verification_url,status:"confirmed"});
+    }
+    let pdf=await pdfBuffer(cert,verificationUrl);
+    const {error:uploadError}=await supabase.storage.from(bucket).upload(storagePath,pdf,{contentType:"application/pdf",upsert:false});
+    if(uploadError){
+      const {data:previousFile,error:previousFileError}=await supabase.storage.from(bucket).download(storagePath);
+      if(previousFileError||!previousFile)throw new Error("No se pudo guardar ni recuperar el PDF original: "+uploadError.message);
+      pdf=Buffer.from(await previousFile.arrayBuffer());
+    }
+    const hash=createHash("sha256").update(pdf).digest("hex");
+    const hashBytes32="0x"+hash;
 
     const provider=new JsonRpcProvider(process.env.ME_EVM_RPC_URL);
     const network=await provider.getNetwork();
