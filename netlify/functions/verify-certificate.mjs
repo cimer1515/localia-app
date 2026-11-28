@@ -12,6 +12,8 @@ export async function handler(event){
     const {data:row,error}=await supabase.from("certificates").select("*").eq("certificate_id",id).maybeSingle();
     if(error||!row) return html("No encontrado",'<p class="bad">No se encontró el certificado o no está publicado.</p>',404);
     const provider=new JsonRpcProvider(process.env.ME_EVM_RPC_URL);
+    const network=await provider.getNetwork();
+    if(network.chainId!==BigInt(process.env.ME_EVM_CHAIN_ID)) throw new Error("El RPC de verificación no coincide con el chain ID configurado.");
     const contract=new Contract(process.env.ME_REGISTRY_ADDRESS,ABI,provider);
     const credentialId=row.credential_id||keccak256(toUtf8Bytes(id));
     const [valid,issuer,issuedAt,revoked]=await contract.verifyCredential(credentialId,"0x"+row.sha256);
