@@ -14,7 +14,7 @@ CAUSA usará este camino para el prototipo:
 
 ## Contrato inicial
 
-`contracts/LocaliaCredentialRegistry.sol` permite:
+`contracts/CausaCredentialRegistry.sol` permite:
 1. Autorizar direcciones de emisores.
 2. Registrar un ID opaco y el hash de un documento.
 3. Verificar hash, emisor, fecha y estado.
