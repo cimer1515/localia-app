@@ -57,9 +57,10 @@ async function getIssuer(req, supabase) {
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
   if (userError || !userData?.user) throw new Error("La sesión de la entidad no es válida.");
   const { data: role, error: roleError } = await supabase.from("issuer_roles")
-    .select("user_id,active").eq("user_id",userData.user.id).eq("active",true).maybeSingle();
+    .select("user_id,active,issuer_name").eq("user_id",userData.user.id).eq("active",true).maybeSingle();
   if (roleError || !role) throw new Error("La cuenta no tiene permiso de emitir certificados.");
-  return userData.user;
+  if (!String(role.issuer_name||"").trim()) throw new Error("La cuenta emisora no tiene un nombre de entidad configurado.");
+  return { ...userData.user, issuerName: role.issuer_name };
 }
 export async function handler(event) {
   if (event.httpMethod === "OPTIONS") return {statusCode:204,headers:{"access-control-allow-origin":process.env.HARBOR_SITE_URL||"*","access-control-allow-methods":"POST,OPTIONS","access-control-allow-headers":"Content-Type,Authorization"}};
@@ -73,6 +74,9 @@ export async function handler(event) {
       if (!String(cert[key]||"").trim()) return json(400,{error:"Falta campo requerido: "+key});
     }
     if (!String(cert.certificateId).match(/^[A-Z0-9_-]{6,100}$/i)) return json(400,{error:"ID de certificado inválido"});
+    if (!Number.isFinite(Date.parse(cert.approvedAt))) return json(400,{error:"Fecha de aprobación inválida"});
+    if (!String(cert.status||"").toUpperCase().includes("DEMO")) return json(400,{error:"Esta función solo emite certificados de demostración en esta versión."});
+    cert.issuer= user.issuerName;
     const verificationUrl=new URL("/verify/"+encodeURIComponent(cert.certificateId),process.env.HARBOR_SITE_URL).toString();
     const pdf=await pdfBuffer(cert,verificationUrl);
     const hash=createHash("sha256").update(pdf).digest("hex");
@@ -106,8 +110,8 @@ export async function handler(event) {
     }
     if(String(record.documentHash).toLowerCase()!==hashBytes32.toLowerCase() || record.revoked) throw new Error("La verificación posterior al registro falló.");
     const {error:dbError}=await supabase.from("certificates").upsert({
-      certificate_id:cert.certificateId,credential_id:credentialId,owner_id:cert.ownerId||user.id,
-      certificate_type:cert.certificateType,issuer_name:cert.issuer,approved_at:cert.approvedAt,
+      certificate_id:cert.certificateId,credential_id:credentialId,owner_id:user.id,
+      certificate_type:cert.certificateType,issuer_name:user.issuerName,approved_at:cert.approvedAt,
       business_name:cert.businessName,activity:cert.activity,city:cert.city,
       storage_bucket:bucket,storage_path:storagePath,sha256:hash,tx_hash:txHash,
       chain_id:Number(network.chainId),registry_address:process.env.ME_REGISTRY_ADDRESS,
