@@ -26,7 +26,7 @@ The generated document is explicitly labeled demo / not official because the cur
 2. Run `supabase/certificates-schema.sql` in SQL Editor.
 3. Create a **private** Storage bucket named `certificates`.
 4. Create/verify a Supabase Auth user for the actual reviewer.
-5. After independently verifying that reviewer, set their `issuer_roles.active` to true using the SQL editor. Never enable this for public/demo users.
+5. After independently verifying that reviewer, insert/update their row in `issuer_roles` with `user_id`, `active=true`, and a verified `issuer_name` (for example the legal entity name). Never enable this for public/demo users.
 
 ## Netlify environment variables (server-side only)
 
